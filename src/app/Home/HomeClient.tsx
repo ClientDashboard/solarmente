@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import './globals.css'; // Cambiado a globals.css que debería contener todo
+import FacturasModal from './components/FacturasModal';
+// import './globals.css'; // Los estilos ya se importan en layout.tsx
 
 // Crea componentes para los iconos que necesitamos
 const ZapIcon = () => (
@@ -48,289 +49,6 @@ interface FacturasModalProps {
   projectId: string | null;
 }
 
-// Componente Modal para mostrar las facturas con animación de ahorro
-const FacturasModal: React.FC<FacturasModalProps> = ({ isOpen, closeModal, projectId }) => {
-  if (!isOpen) return null;
-  
-  const [animationComplete, setAnimationComplete] = useState(false);
-  const [showComparison, setShowComparison] = useState(false);
-  const [kwhCounter, setKwhCounter] = useState(23000);
-  const [priceCounter, setPriceCounter] = useState(3500);
-  const [showFullContent, setShowFullContent] = useState(false);
-  
-  // Mapeo de imágenes por proyecto
-  const facturaImages: Record<string, string[]> = {
-    dsv: ['/images/dsvfactura1.png', '/images/dsvfactura2.png'],
-    // Puedes agregar más proyectos según necesites
-  };
-
-  const images = projectId && facturaImages[projectId] ? facturaImages[projectId] : [];
-  
-  // Datos de consumo por proyecto
-  const projectData: Record<string, { kwhBefore: number, kwhAfter: number, priceBefore: number, priceAfter: number }> = {
-    dsv: {
-      kwhBefore: 23000,
-      kwhAfter: 0,
-      priceBefore: 3500,
-      priceAfter: 500,
-    },
-    // Puedes agregar más proyectos aquí
-  };
-  
-  const data = projectId && projectData[projectId] ? projectData[projectId] : 
-    { kwhBefore: 0, kwhAfter: 0, priceBefore: 0, priceAfter: 0 };
-  
-  useEffect(() => {
-    if (isOpen) {
-      // Mostrar primero la animación de entrada
-      const timeout1 = setTimeout(() => {
-        setShowComparison(true);
-      }, 500);
-      
-      // Luego iniciar la animación de los contadores
-      const timeout2 = setTimeout(() => {
-        const kwhInterval = setInterval(() => {
-          setKwhCounter(prev => {
-            const newValue = prev - Math.ceil((data.kwhBefore - data.kwhAfter) / 50);
-            if (newValue <= data.kwhAfter) {
-              clearInterval(kwhInterval);
-              return data.kwhAfter;
-            }
-            return newValue;
-          });
-        }, 40);
-        
-        const priceInterval = setInterval(() => {
-          setPriceCounter(prev => {
-            const newValue = prev - Math.ceil((data.priceBefore - data.priceAfter) / 50);
-            if (newValue <= data.priceAfter) {
-              clearInterval(priceInterval);
-              return data.priceAfter;
-            }
-            return newValue;
-          });
-        }, 40);
-        
-        return () => {
-          clearInterval(kwhInterval);
-          clearInterval(priceInterval);
-        };
-      }, 1000);
-      
-      // Mostrar el contenido completo después de terminar las animaciones
-      const timeout3 = setTimeout(() => {
-        setAnimationComplete(true);
-        setShowFullContent(true);
-      }, 3000);
-      
-      return () => {
-        clearTimeout(timeout1);
-        clearTimeout(timeout2);
-        clearTimeout(timeout3);
-      };
-    } else {
-      // Resetear estados al cerrar
-      setShowComparison(false);
-      setAnimationComplete(false);
-      setShowFullContent(false);
-      setKwhCounter(data.kwhBefore);
-      setPriceCounter(data.priceBefore);
-    }
-  }, [isOpen, data.kwhBefore, data.kwhAfter, data.priceBefore, data.priceAfter]);
-
-  // Función para formatear números con separador de miles
-  const formatNumber = (num: number): string => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="bg-gray-900 border border-gray-800 rounded-xl w-full max-w-4xl overflow-hidden shadow-2xl">
-        <div className="bg-gradient-to-r from-solarmente-orange to-solarmente-orange/90 p-4 text-white flex justify-between items-center">
-          <h3 className="text-xl font-bold">Resultados de Ahorro Increíbles</h3>
-          <button 
-            onClick={closeModal}
-            className="text-white hover:text-gray-200 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="p-6">
-          {/* Animación de transición inicial */}
-          {!showComparison && (
-            <div className="flex flex-col items-center justify-center py-16 animate-fadeIn">
-              <div className="w-20 h-20 border-t-2 border-b-2 border-solarmente-orange rounded-full animate-spin mb-8"></div>
-              <h3 className="text-2xl font-bold text-white mb-4">Calculando ahorros...</h3>
-              <p className="text-gray-400 text-center max-w-lg">
-                Estamos procesando los datos de antes y después para mostrarle los resultados impresionantes
-              </p>
-            </div>
-          )}
-          
-          {showComparison && (
-            <>
-              {/* Tablero de comparación de energía */}
-              <div className="mb-8 bg-black/50 p-6 rounded-xl border border-gray-800">
-                <h4 className="text-xl font-bold text-white mb-6 text-center">Impacto en Consumo y Facturación</h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Consumo de energía */}
-                  <div className="relative">
-                    <h5 className="text-lg font-semibold text-white mb-2 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                      </svg>
-                      Consumo de Energía
-                    </h5>
-                    
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-gray-400">Antes:</span>
-                      <span className="text-white font-bold">{formatNumber(data.kwhBefore)} kWh</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Ahora:</span>
-                      <div className="flex items-baseline">
-                        <span className={`text-2xl font-bold ${animationComplete ? 'text-green-400' : 'text-white'} transition-colors duration-500`}>
-                          {formatNumber(kwhCounter)} kWh
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="h-3 w-full bg-gray-700 rounded-full mt-4 overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-green-500 to-green-300 transition-all duration-1000 ease-out rounded-full"
-                        style={{ 
-                          width: `${100 - (kwhCounter / data.kwhBefore * 100)}%`,
-                          transitionDelay: '0.5s'
-                        }}
-                      ></div>
-                    </div>
-                    
-                    {animationComplete && (
-                      <div className="mt-2 text-right">
-                        <span className="text-green-400 font-bold">
-                          {Math.round(100 - (data.kwhAfter / data.kwhBefore * 100))}% de reducción
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Facturación */}
-                  <div className="relative">
-                    <h5 className="text-lg font-semibold text-white mb-2 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                      </svg>
-                      Facturación Mensual
-                    </h5>
-                    
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-gray-400">Antes:</span>
-                      <span className="text-white font-bold">${formatNumber(data.priceBefore)}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Ahora:</span>
-                      <div className="flex items-baseline">
-                        <span className={`text-2xl font-bold ${animationComplete ? 'text-green-400' : 'text-white'} transition-colors duration-500`}>
-                          ${formatNumber(priceCounter)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="h-3 w-full bg-gray-700 rounded-full mt-4 overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-green-500 to-green-300 transition-all duration-1000 ease-out rounded-full"
-                        style={{ 
-                          width: `${100 - (priceCounter / data.priceBefore * 100)}%`,
-                          transitionDelay: '0.75s'
-                        }}
-                      ></div>
-                    </div>
-                    
-                    {animationComplete && (
-                      <div className="mt-2 text-right">
-                        <span className="text-green-400 font-bold">
-                          {Math.round(100 - (data.priceAfter / data.priceBefore * 100))}% de ahorro
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {animationComplete && (
-                  <div className="mt-6 text-center">
-                    <div className="inline-flex items-center justify-center px-4 py-2 bg-solarmente-orange/20 rounded-full text-solarmente-orange">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Ahorro anual estimado: <span className="font-bold ml-1">${formatNumber((data.priceBefore - data.priceAfter) * 12)}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Imágenes de facturas (aparecen después de la animación) */}
-              {showFullContent && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
-                  <div className="space-y-3">
-                    <h4 className="text-white font-semibold flex items-center">
-                      <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
-                      ANTES de Energía Solar
-                    </h4>
-                    <div className="bg-black rounded-lg overflow-hidden border border-gray-800 h-80 flex items-center justify-center p-2">
-                      {images[0] ? (
-                        <img 
-                          src={images[0]} 
-                          alt="Factura Antes" 
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      ) : (
-                        <p className="text-gray-500">Imagen no disponible</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <h4 className="text-white font-semibold flex items-center">
-                      <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                      DESPUÉS de Energía Solar
-                    </h4>
-                    <div className="bg-black rounded-lg overflow-hidden border border-gray-800 h-80 flex items-center justify-center p-2">
-                      {images[1] ? (
-                        <img 
-                          src={images[1]} 
-                          alt="Factura Después" 
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      ) : (
-                        <p className="text-gray-500">Imagen no disponible</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-          
-          <div className="mt-8 text-center">
-            <button 
-              onClick={closeModal}
-              className="orange-button py-3 px-8 text-white font-bold rounded-lg transition-all duration-300"
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function HomeClient() {
   const router = useRouter();
   const [scrollY, setScrollY] = useState(0);
@@ -342,6 +60,51 @@ export default function HomeClient() {
   const [currentProject, setCurrentProject] = useState<string | null>(null);
   const targetCount = 280; // Número de instalaciones
   const mainRef = useRef<HTMLDivElement>(null);
+  
+  // Función openModal con useCallback para evitar recreaciones innecesarias
+  const openModal = useCallback((projectId: string) => {
+    // Guardar posición actual del scroll antes de abrir el modal
+    const scrollPosition = window.scrollY;
+    
+    // Añadir clase para bloquear scroll
+    document.body.classList.add('modal-open');
+    document.body.setAttribute('data-scroll', scrollPosition.toString());
+    
+    // Actualizar estado
+    setCurrentProject(projectId);
+    setModalOpen(true);
+  }, []);
+  
+  // Función closeModal con useCallback
+  const closeModal = useCallback(() => {
+    // Restaurar scroll cuando se cierra el modal
+    const scrollPosition = parseInt(document.body.getAttribute('data-scroll') || '0');
+    document.body.classList.remove('modal-open');
+    window.scrollTo(0, scrollPosition);
+    
+    // Actualizar estado
+    setModalOpen(false);
+  }, []);
+  
+  // Funciones específicas para los manejadores de eventos de cada proyecto
+  const handleOpenDsvModal = useCallback(() => {
+    openModal('dsv');
+  }, [openModal]);
+  
+  // Toggle AI Demo con useCallback
+  const toggleAIDemo = useCallback(() => {
+    setShowAIDemo(prev => !prev);
+    setDemoStep(1);
+  }, []);
+  
+  // Advance Demo con useCallback
+  const advanceDemo = useCallback(() => {
+    if (demoStep < 3) {
+      setDemoStep(prev => prev + 1);
+    } else {
+      setShowAIDemo(false);
+    }
+  }, [demoStep]);
   
   useEffect(() => {
     // Efecto para la animación inicial
@@ -374,28 +137,44 @@ export default function HomeClient() {
       clearInterval(counterInterval);
     };
   }, []);
-
-  const toggleAIDemo = () => {
-    setShowAIDemo(!showAIDemo);
-    setDemoStep(1);
-  };
-
-  const advanceDemo = () => {
-    if (demoStep < 3) {
-      setDemoStep(demoStep + 1);
-    } else {
-      setShowAIDemo(false);
-    }
-  };
   
-  const openModal = (projectId: string) => {
-    setCurrentProject(projectId);
-    setModalOpen(true);
-  };
-  
-  const closeModal = () => {
-    setModalOpen(false);
-  };
+  // Nuevo efecto para forzar reinicio de animaciones
+  useEffect(() => {
+    // Solución para forzar reinicio de animaciones
+    const triggerAnimations = () => {
+      const lines = document.querySelectorAll('.moving-line-h, .moving-line-v');
+      lines.forEach(line => {
+        // Reiniciar la animación
+        line.classList.remove('moving-line-h', 'moving-line-v');
+        // Forzar un reflow - con cast explícito a HTMLElement
+        void (line as HTMLElement).offsetWidth;
+        // Re-añadir las clases
+        if (line.classList.contains('line-h1') ||
+            line.classList.contains('line-h2') ||
+            line.classList.contains('line-h3')) {
+          line.classList.add('moving-line-h');
+        } else {
+          line.classList.add('moving-line-v');
+        }
+      });
+    };
+    
+    // Ejecutar una vez al cargar
+    triggerAnimations();
+    
+    // También cada vez que cambie scrollY (para asegurar que siempre funcionen)
+    const handleScroll = () => {
+      if (window.scrollY === 0) {
+        triggerAnimations();
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Función para dar formato al número con comas para miles
   const formatNumber = (num: number): string => {
@@ -830,7 +609,7 @@ export default function HomeClient() {
           <span className="font-bold text-green-500">$4,500</span>
         </div>
         <button 
-          onClick={() => openModal('dsv')}
+          onClick={handleOpenDsvModal}
           className="w-full text-solarmente-orange hover:text-white inline-flex items-center justify-center text-sm font-medium py-2 border border-solarmente-orange/30 rounded-lg hover:bg-solarmente-orange transition-all duration-300"
         >
           Ver resultados de ahorro
@@ -971,12 +750,14 @@ export default function HomeClient() {
           </div>
         </div>
         
-        {/* Modal para mostrar facturas */}
-        <FacturasModal
-          isOpen={modalOpen}
-          closeModal={closeModal}
-          projectId={currentProject}
-        />
+        {/* Modal para mostrar facturas - Reemplazado por renderizado condicional */}
+        {modalOpen && (
+          <FacturasModal
+            isOpen={true}
+            closeModal={closeModal}
+            projectId={currentProject}
+          />
+        )}
       </section>
 
       {/* Call to Action Mejorado con estilo oscuro */}
@@ -1046,6 +827,51 @@ export default function HomeClient() {
         
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        
+        /* Asegurar que las animaciones de línea funcionen correctamente */
+        @keyframes moveHorizontal {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+
+        @keyframes moveVertical {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(100%); }
+        }
+
+        .moving-line-h {
+          height: 1px;
+          width: 100%;
+          position: absolute;
+          background: linear-gradient(90deg, rgba(247, 127, 0, 0), rgba(247, 127, 0, 0.2), rgba(247, 127, 0, 0));
+          opacity: 0.3;
+          animation: moveHorizontal 15s linear infinite;
+          will-change: transform;
+        }
+
+        .moving-line-v {
+          width: 1px;
+          height: 100%;
+          position: absolute;
+          background: linear-gradient(90deg, rgba(247, 127, 0, 0), rgba(247, 127, 0, 0.2), rgba(247, 127, 0, 0));
+          opacity: 0.3;
+          animation: moveVertical 15s linear infinite;
+          will-change: transform;
+        }
+
+        /* Corregir problema de scroll en modales */
+        body.modal-open {
+          overflow: hidden;
+          position: fixed;
+          width: 100%;
+        }
+
+        /* Mejorar rendimiento de animaciones */
+        .animate-pulse-custom,
+        .animate-fadeIn,
+        .animate-bounce {
+          will-change: opacity, transform;
         }
       `}</style>
     </div>
