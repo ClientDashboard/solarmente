@@ -1,0 +1,74 @@
+/* Estilos para líneas animadas */
+.moving-line-h, .moving-line-v {
+  position: absolute;
+  background: linear-gradient(90deg, rgba(247, 127, 0, 0), rgba(247, 127, 0, 0.2), rgba(247, 127, 0, 0));
+  opacity: 0.3;
+}
+
+.moving-line-h {
+  height: 1px;
+  width: 100%;
+  animation: moveHorizontal 15s linear infinite;
+}
+
+.moving-line-v {
+  width: 1px;
+  height: 100%;
+  animation: moveVertical 15s linear infinite;
+}
+
+.line-h1 { top: 20%; animation-delay: -2s; }
+.line-h2 { top: 50%; animation-delay: -5s; }
+.line-h3 { top: 80%; animation-delay: -9s; }
+
+.line-v1 { left: 30%; animation-delay: -3s; }
+.line-v2 { left: 60%; animation-delay: -7s; }
+.line-v3 { left: 80%; animation-delay: -11s; }
+
+@keyframes moveHorizontal {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes moveVertical {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* Animación de pulse personalizada */
+.animate-pulse-custom {
+  animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-custom {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Botón naranja */
+.orange-button {
+  background: linear-gradient(90deg, #F97316 0%, #FB923C 100%);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.orange-button:hover {
+  background: linear-gradient(90deg, #EA580C 0%, #F97316 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.4);
+}
+
+.orange-button:active {
+  transform: translateY(0);
+}
+
+/* Animación de fadeIn */
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

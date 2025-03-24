@@ -1,0 +1,159 @@
+/* Animaciones para las líneas móviles - alineadas con el panel solar pero por debajo del formulario */
+.moving-line-h {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(to right, rgba(255, 103, 31, 0), rgba(255, 103, 31, 0.9), rgba(255, 103, 31, 0));
+  width: 100%;
+  animation: moveHorizontal 25s linear infinite;
+  z-index: 8; /* Reducido para estar debajo del formulario pero por encima del fondo */
+  box-shadow: 0 0 18px rgba(255, 103, 31, 0.7);
+  will-change: transform; /* Optimización para animaciones */
+}
+
+.moving-line-v {
+  position: absolute;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(255, 103, 31, 0), rgba(255, 103, 31, 0.9), rgba(255, 103, 31, 0));
+  height: 100%;
+  animation: moveVertical 25s linear infinite;
+  z-index: 8; /* Reducido para estar debajo del formulario pero por encima del fondo */
+  box-shadow: 0 0 18px rgba(255, 103, 31, 0.7);
+  will-change: transform; /* Optimización para animaciones */
+}
+
+/* Alineación precisa con líneas del panel solar */
+.line-h1 {
+  top: 0; /* Primer línea horizontal */
+  animation-delay: -2s;
+}
+
+.line-h2 {
+  top: 300px; /* Línea en la posición exacta de una línea del panel */
+  animation-delay: -8s;
+}
+
+.line-h3 {
+  top: 600px; /* Línea en la posición exacta de una línea del panel */
+  animation-delay: -15s;
+}
+
+.line-v1 {
+  left: 0; /* Primera línea vertical */
+  animation-delay: -3s;
+}
+
+.line-v2 {
+  left: 200px; /* Línea en la posición exacta de una línea del panel */
+  animation-delay: -10s;
+}
+
+.line-v3 {
+  left: 400px; /* Línea en la posición exacta de una línea del panel */
+  animation-delay: -18s;
+}
+
+@keyframes moveHorizontal {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes moveVertical {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* Optimización de animaciones: reducir costo de repintado */
+@media (prefers-reduced-motion: reduce) {
+  .moving-line-h, .moving-line-v, .animate-pulse-custom {
+    animation: none;
+  }
+}
+
+/* Animación fade in */
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animación de pulso personalizada */
+.animate-pulse-custom {
+  animation: pulse-custom 3s infinite;
+  will-change: transform, box-shadow;
+}
+
+@keyframes pulse-custom {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 103, 31, 0.7);
+  }
+  
+  50% {
+    transform: scale(1);
+    box-shadow: 0 0 0 15px rgba(255, 103, 31, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 103, 31, 0);
+  }
+}
+
+/* Estilo para el botón naranja con efecto hover */
+.orange-button {
+  background: linear-gradient(to right, #FF671F, #FF671F);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  transform: translateZ(0); /* Forzar aceleración por hardware */
+}
+
+.orange-button:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+
+.orange-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 103, 31, 0.4);
+}
+
+.orange-button:hover:before {
+  transform: translateX(200%);
+}
+
+.orange-button:active {
+  transform: translateY(1px);
+}
+
+/* Fuente Mulish */
+@font-face {
+  font-family: 'Mulish';
+  src: url('https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;600;700&display=swap');
+  font-display: swap;
+}
