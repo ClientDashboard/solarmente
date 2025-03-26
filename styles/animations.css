@@ -1,24 +1,26 @@
-/* Animaciones para las líneas móviles - alineadas con el panel solar pero por debajo del formulario */
+/* Animaciones para las líneas móviles con mayor intensidad */
 .moving-line-h {
   position: absolute;
-  height: 2px;
-  background: linear-gradient(to right, rgba(255, 103, 31, 0), rgba(255, 103, 31, 0.9), rgba(255, 103, 31, 0));
+  height: 3px; /* Aumentado de 2px a 3px */
+  background: linear-gradient(to right, rgba(255, 103, 31, 0), rgba(255, 103, 31, 1), rgba(255, 103, 31, 0));
   width: 100%;
   animation: moveHorizontal 25s linear infinite;
-  z-index: 8; /* Reducido para estar debajo del formulario pero por encima del fondo */
-  box-shadow: 0 0 18px rgba(255, 103, 31, 0.7);
-  will-change: transform; /* Optimización para animaciones */
+  z-index: 8;
+  box-shadow: 0 0 25px rgba(255, 103, 31, 0.9); /* Sombra más intensa */
+  opacity: 0.6; /* Aumentado de 0.3 a 0.6 */
+  will-change: transform;
 }
 
 .moving-line-v {
   position: absolute;
-  width: 2px;
-  background: linear-gradient(to bottom, rgba(255, 103, 31, 0), rgba(255, 103, 31, 0.9), rgba(255, 103, 31, 0));
+  width: 3px; /* Aumentado de 2px a 3px */
+  background: linear-gradient(to bottom, rgba(255, 103, 31, 0), rgba(255, 103, 31, 1), rgba(255, 103, 31, 0));
   height: 100%;
   animation: moveVertical 25s linear infinite;
-  z-index: 8; /* Reducido para estar debajo del formulario pero por encima del fondo */
-  box-shadow: 0 0 18px rgba(255, 103, 31, 0.7);
-  will-change: transform; /* Optimización para animaciones */
+  z-index: 8;
+  box-shadow: 0 0 25px rgba(255, 103, 31, 0.9); /* Sombra más intensa */
+  opacity: 0.6; /* Aumentado de 0.3 a 0.6 */
+  will-change: transform;
 }
 
 /* Alineación precisa con líneas del panel solar */

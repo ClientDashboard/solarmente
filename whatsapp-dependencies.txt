@@ -1,0 +1,10 @@
+Para implementar el bot de WhatsApp, necesitas instalar los siguientes paquetes:
+
+npm install @open-wa/wa-automate nodemailer openai dotenv
+
+Si ya tienes algunos de estos paquetes instalados, solo instala los que falten.
+
+Para iniciar el bot manualmente y escanear el código QR:
+node scripts/start-whatsapp-bot.js
+
+Recuerda que necesitas tener todas las variables de entorno configuradas en .env.local

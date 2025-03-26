@@ -1,0 +1,29 @@
+2025/03/25-13:34:13.753 b103 Creating DB /Users/alvarolopez/Downloads/Solarmente/solarmente/.wwebjs_auth/session-solarmente-bot/Default/Local Storage/leveldb since it was missing.
+2025/03/25-13:34:13.769 b103 Reusing MANIFEST /Users/alvarolopez/Downloads/Solarmente/solarmente/.wwebjs_auth/session-solarmente-bot/Default/Local Storage/leveldb/MANIFEST-000001
+2025/03/25-15:35:22.669 b10b Level-0 table #5: started
+2025/03/25-15:35:22.674 b10b Level-0 table #5: 16825 bytes OK
+2025/03/25-15:35:22.682 b10b Delete type=0 #3
+2025/03/25-18:03:03.522 b10b Level-0 table #7: started
+2025/03/25-18:03:03.528 b10b Level-0 table #7: 13969 bytes OK
+2025/03/25-18:03:03.535 b10b Delete type=0 #4
+2025/03/25-22:23:15.324 11d6f Level-0 table #9: started
+2025/03/25-22:23:15.331 11d6f Level-0 table #9: 13139 bytes OK
+2025/03/25-22:23:15.340 11d6f Delete type=0 #6
+2025/03/26-02:10:21.797 b13b Level-0 table #11: started
+2025/03/26-02:10:21.806 b13b Level-0 table #11: 14083 bytes OK
+2025/03/26-02:10:21.815 b13b Delete type=0 #8
+2025/03/26-04:42:11.954 b13b Level-0 table #13: started
+2025/03/26-04:42:11.962 b13b Level-0 table #13: 13907 bytes OK
+2025/03/26-04:42:11.971 b13b Delete type=0 #10
+2025/03/26-07:14:17.873 87d7 Level-0 table #15: started
+2025/03/26-07:14:17.879 87d7 Level-0 table #15: 14010 bytes OK
+2025/03/26-07:14:17.888 87d7 Delete type=0 #12
+2025/03/26-07:14:17.891 9eab Compacting 4@0 + 1@1 files
+2025/03/26-07:14:17.895 9eab Generated table #16@0: 4 keys, 1736 bytes
+2025/03/26-07:14:17.895 9eab Compacted 4@0 + 1@1 files => 1736 bytes
+2025/03/26-07:14:17.902 9eab compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/03/26-07:14:17.903 9eab Delete type=2 #15
+2025/03/26-07:14:17.903 9eab Delete type=2 #7
+2025/03/26-07:14:17.903 9eab Delete type=2 #13
+2025/03/26-07:14:17.903 9eab Delete type=2 #11
+2025/03/26-07:14:17.903 9eab Delete type=2 #9

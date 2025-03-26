@@ -3,6 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import '../../../styles/animations.css';
+import { createClient } from '@supabase/supabase-js';
+
+// Inicializar cliente de Supabase (ajusta si deseas usarlo para almacenar faseElectrica)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Provincias de Panamá
 const PROVINCIAS = [
@@ -28,6 +34,8 @@ interface FormData {
   consumo: number;
   tipoPropiedad: 'residencial' | 'comercial';
   provincia: string;
+  // Nueva propiedad para monofásico / trifásico
+  faseElectrica: 'monofasico' | 'trifasico';
 }
 
 interface FormErrors {
@@ -41,6 +49,8 @@ export default function ProposalForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
+  
+  // Estado inicial con faseElectrica por defecto "monofasico"
   const [formData, setFormData] = useState<FormData>({
     nombre: '',
     telefono: '',
@@ -48,6 +58,7 @@ export default function ProposalForm() {
     consumo: 1000,
     tipoPropiedad: 'residencial',
     provincia: 'Panamá',
+    faseElectrica: 'monofasico', // Valor por defecto
   });
   
   const [errors, setErrors] = useState<FormErrors>({
@@ -76,7 +87,7 @@ export default function ProposalForm() {
       [name]: name === 'consumo' ? parseInt(value) : value,
     });
     
-    // Clear error when user types
+    // Clear error cuando el usuario escribe
     if (errors[name as keyof FormErrors]) {
       setErrors({
         ...errors,
@@ -139,14 +150,13 @@ export default function ProposalForm() {
     setActiveStep(activeStep - 1);
   };
 
+  // Cálculo simplificado de ahorro mensual
   const calculateSavings = (): number => {
-    // Cálculo simplificado de ahorro mensual basado en consumo
-    const tarifaPromedio = 0.26; // $0.26 por kWh en Panamá
-    const ahorroMensual = formData.consumo * tarifaPromedio; // 100% de ahorro
+    const tarifaPromedio = 0.26; // $0.26/kWh
+    const ahorroMensual = formData.consumo * tarifaPromedio;
     return Math.round(ahorroMensual);
   };
   
-  // Función para dar formato al número con comas para miles
   const formatNumber = (num: number): string => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
@@ -160,13 +170,13 @@ export default function ProposalForm() {
       setIsSubmitting(true);
       
       try {
-        // Simular carga con análisis de IA
+        // Simulamos un retardo
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Generamos un ID temporal para simular la base de datos
+        // Generamos un ID temporal
         const tempId = `temp-${Date.now()}`;
         
-        // Construimos los parámetros de la URL
+        // Construimos los parámetros de la URL, incluyendo faseElectrica
         const params = new URLSearchParams({
           id: tempId,
           nombre: formData.nombre,
@@ -174,10 +184,11 @@ export default function ProposalForm() {
           email: formData.email,
           consumo: formData.consumo.toString(),
           tipoPropiedad: formData.tipoPropiedad,
-          provincia: formData.provincia
+          provincia: formData.provincia,
+          faseElectrica: formData.faseElectrica
         }).toString();
         
-        // Redirigimos directamente a la página de resultados
+        // Redirigimos a la página de resultados
         router.push(`/propuesta/resultado?${params}`);
       } catch (error: any) {
         console.error('Error al procesar el formulario:', error);
@@ -198,23 +209,29 @@ export default function ProposalForm() {
       {/* Background with animated lines */}
       <div className="absolute inset-0 bg-black">
         {/* Grid Pattern - Panel Solar */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(0deg, rgba(30, 30, 40, 0.9) 1px, transparent 1px), 
-            linear-gradient(90deg, rgba(30, 30, 40, 0.9) 1px, transparent 1px),
-            linear-gradient(rgba(20, 80, 120, 0.1) 1px, transparent 2px),
-            linear-gradient(90deg, rgba(20, 80, 120, 0.1) 1px, transparent 2px)
-          `,
-          backgroundSize: '200px 300px, 200px 300px, 40px 60px, 40px 60px',
-          backgroundPosition: '0 0, 0 0, -1px -1px, -1px -1px',
-          opacity: 0.6
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(0deg, rgba(30, 30, 40, 0.9) 1px, transparent 1px), 
+              linear-gradient(90deg, rgba(30, 30, 40, 0.9) 1px, transparent 1px),
+              linear-gradient(rgba(20, 80, 120, 0.2) 1px, transparent 2px),
+              linear-gradient(90deg, rgba(20, 80, 120, 0.2) 1px, transparent 2px)
+            `,
+            backgroundSize: '200px 300px, 200px 300px, 40px 60px, 40px 60px',
+            backgroundPosition: '0 0, 0 0, -1px -1px, -1px -1px',
+            opacity: 0.7
+          }}
+        ></div>
         
         {/* Efecto reflejo panel solar */}
-        <div className="absolute inset-0" style={{
-          background: 'radial-gradient(circle at 70% 20%, rgba(40, 80, 120, 0.2) 0%, transparent 70%)',
-          opacity: 0.7
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at 70% 20%, rgba(40, 80, 120, 0.2) 0%, transparent 70%)',
+            opacity: 0.7
+          }}
+        ></div>
         
         {/* Animated Lines */}
         <div className="moving-line-h line-h1"></div>
@@ -267,12 +284,12 @@ export default function ProposalForm() {
           </div>
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#FF671F] to-[#FF671F]/90 text-white p-6">
+          <div className="bg-gray-900 text-white p-6">
             <h3 className="text-2xl font-bold mb-2 flex items-center">
               <span>{activeStep < 4 ? `Paso ${activeStep} de 3` : 'Revisar datos'}</span>
               <span className="ml-auto">
                 {estimatedSavings > 0 && activeStep > 2 && (
-                  <span className="bg-gray-800 text-[#FF671F] px-3 py-1 rounded-full text-xs font-bold">
+                  <span className="bg-black text-[#FF671F] px-3 py-1 rounded-full text-xs font-bold border border-[#FF671F]/30">
                     Ahorro: ~${formatNumber(estimatedSavings)}/mes
                   </span>
                 )}
@@ -281,7 +298,7 @@ export default function ProposalForm() {
             <p className="text-sm leading-relaxed">
               {activeStep === 1 && "Comencemos por conocerte. Ingresa tu nombre completo para personalizar tu propuesta."}
               {activeStep === 2 && "¿Cómo podemos contactarte? Necesitamos tu teléfono y email para enviarte la propuesta."}
-              {activeStep === 3 && "Cuéntanos sobre tu propiedad para calcular el sistema ideal para ti."}
+              {activeStep === 3 && "Cuéntanos sobre tu propiedad y la fase eléctrica para calcular el sistema ideal."}
               {activeStep === 4 && "Revisa tus datos antes de generar tu propuesta personalizada con IA."}
             </p>
           </div>
@@ -289,7 +306,7 @@ export default function ProposalForm() {
           {/* Form Body */}
           <div className="p-6 bg-black">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Step 1: Personal Information */}
+              {/* Step 1: Nombre */}
               {activeStep === 1 && (
                 <div className="transition-all duration-300 animate-fadeIn">
                   <label htmlFor="nombre" className="block text-sm font-medium text-gray-300 mb-2">
@@ -332,7 +349,7 @@ export default function ProposalForm() {
                 </div>
               )}
               
-              {/* Step 2: Contact Information */}
+              {/* Step 2: Contacto */}
               {activeStep === 2 && (
                 <div className="transition-all duration-300 animate-fadeIn">
                   <div className="space-y-5">
@@ -420,7 +437,7 @@ export default function ProposalForm() {
                 </div>
               )}
               
-              {/* Step 3: Property & Consumption Information */}
+              {/* Step 3: Propiedad y Fase Eléctrica */}
               {activeStep === 3 && (
                 <div className="transition-all duration-300 animate-fadeIn">
                   <div className="space-y-5">
@@ -485,6 +502,42 @@ export default function ProposalForm() {
                               )}
                             </div>
                             <span className="ml-2 font-medium text-white">Comercial</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Nueva sección para Monofásico o Trifásico */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Fase Eléctrica
+                      </label>
+                      <div className="grid grid-cols-2 gap-4 mt-2">
+                        <div 
+                          className={`border-2 ${formData.faseElectrica === 'monofasico' ? 'border-[#FF671F] bg-[#FF671F]/10' : 'border-gray-700 bg-gray-900'} rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-[#FF671F]/70`}
+                          onClick={() => setFormData({...formData, faseElectrica: 'monofasico'})}
+                        >
+                          <div className="flex items-center">
+                            <div className={`w-5 h-5 rounded-full border-2 ${formData.faseElectrica === 'monofasico' ? 'border-[#FF671F] bg-[#FF671F]' : 'border-gray-600'} flex items-center justify-center`}>
+                              {formData.faseElectrica === 'monofasico' && (
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                              )}
+                            </div>
+                            <span className="ml-2 font-medium text-white">Monofásico</span>
+                          </div>
+                        </div>
+                        
+                        <div 
+                          className={`border-2 ${formData.faseElectrica === 'trifasico' ? 'border-[#FF671F] bg-[#FF671F]/10' : 'border-gray-700 bg-gray-900'} rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-[#FF671F]/70`}
+                          onClick={() => setFormData({...formData, faseElectrica: 'trifasico'})}
+                        >
+                          <div className="flex items-center">
+                            <div className={`w-5 h-5 rounded-full border-2 ${formData.faseElectrica === 'trifasico' ? 'border-[#FF671F] bg-[#FF671F]' : 'border-gray-600'} flex items-center justify-center`}>
+                              {formData.faseElectrica === 'trifasico' && (
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                              )}
+                            </div>
+                            <span className="ml-2 font-medium text-white">Trifásico</span>
                           </div>
                         </div>
                       </div>
@@ -563,7 +616,7 @@ export default function ProposalForm() {
                 </div>
               )}
               
-              {/* Step 4: Summary and Submit */}
+              {/* Step 4: Resumen y Submit */}
               {activeStep === 4 && (
                 <div className="transition-all duration-300 animate-fadeIn">
                   <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
@@ -598,6 +651,14 @@ export default function ProposalForm() {
                       <div className="border-b border-gray-800 pb-2">
                         <p className="text-sm text-gray-500">Consumo mensual</p>
                         <p className="font-medium text-white">{formatNumber(formData.consumo)} kWh</p>
+                      </div>
+
+                      {/* Mostrar la fase eléctrica en el resumen */}
+                      <div className="border-b border-gray-800 pb-2">
+                        <p className="text-sm text-gray-500">Fase Eléctrica</p>
+                        <p className="font-medium text-white">
+                          {formData.faseElectrica === 'monofasico' ? 'Monofásico' : 'Trifásico'}
+                        </p>
                       </div>
                     </div>
                   </div>

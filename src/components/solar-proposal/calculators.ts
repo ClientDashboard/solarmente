@@ -169,6 +169,69 @@ export function calcularROI(totalPrecio: number, ahorroAnual: number): number {
   return Math.round((totalPrecio / ahorroAnual) * 100) / 100;
 }
 
+/**
+ * Obtiene información detallada sobre los paneles solares
+ */
+export function obtenerInfoPanel(): {
+  marca: string;
+  modelo: string;
+  potencia: number;
+  eficiencia: number;
+  dimensiones: typeof constants.PANEL_DIMENSIONS;
+} {
+  return {
+    marca: constants.PANEL_BRAND,
+    modelo: constants.PANEL_MODEL,
+    potencia: constants.PANEL_SIZE_WATTS,
+    eficiencia: constants.PANEL_EFFICIENCY,
+    dimensiones: constants.PANEL_DIMENSIONS
+  };
+}
+
+/**
+ * Selecciona el inversor apropiado basado en el tamaño del sistema y tipo de conexión
+ */
+export function seleccionarInversor(tamanoSistema: number, esMonofasico: boolean = true): {
+  marca: string;
+  modelo: string;
+  potencia: number;
+  eficiencia: number;
+  cantidad: number;
+} {
+  // Convertir tamaño de sistema a Watts
+  const potenciaSistemaWatts = tamanoSistema * 1000;
+  
+  // Seleccionar lista de inversores según tipo de conexión
+  const inversores = esMonofasico ? constants.SOLIS_MONOFASIC_INVERTERS : constants.SOLIS_TRIFASIC_INVERTERS;
+  
+  // Encontrar el inversor adecuado o combinación de inversores
+  let inversorSeleccionado;
+  let cantidadInversores = 1;
+  
+  // Para sistemas pequeños, encontrar el inversor más cercano por encima de la potencia
+  for (const inversor of inversores) {
+    if (inversor.power >= tamanoSistema) {
+      inversorSeleccionado = inversor;
+      break;
+    }
+  }
+  
+  // Si no encontramos uno adecuado o es demasiado grande, usamos múltiples inversores
+  if (!inversorSeleccionado || inversorSeleccionado.power > tamanoSistema * 1.5) {
+    // Encontrar el inversor más grande en la lista
+    inversorSeleccionado = inversores[inversores.length - 1];
+    cantidadInversores = Math.ceil(tamanoSistema / inversorSeleccionado.power);
+  }
+  
+  return {
+    marca: "Solis",
+    modelo: inversorSeleccionado.model,
+    potencia: inversorSeleccionado.power,
+    eficiencia: esMonofasico ? constants.INVERTER_EFFICIENCY_MONO : constants.INVERTER_EFFICIENCY_TRI,
+    cantidad: cantidadInversores
+  };
+}
+
 // Tipos específicos para los resultados de los planes
 interface Plan1Result {
   sistema: number;
@@ -195,7 +258,7 @@ interface Plan2Result {
 /**
  * Función principal para calcular todos los datos de la propuesta
  */
-export function calcularPropuesta(consumo: number): CalculosData {
+export function calcularPropuesta(consumo: number, esMonofasico: boolean = true): CalculosData {
   // Cálculos del sistema
   const paneles = calcularPaneles(consumo);
   const tamanoSistema = calcularTamanoSistema(paneles);
@@ -228,8 +291,9 @@ export function calcularPropuesta(consumo: number): CalculosData {
   // ROI
   const roi = calcularROI(plan1.total, ahorroAnual);
   
-  // Número de inversores
-  const inversores = Math.max(1, Math.ceil(tamanoSistema / 23));
+  // NUEVO: Información sobre los equipos
+  const infoPanel = obtenerInfoPanel();
+  const infoInversor = seleccionarInversor(tamanoSistema, esMonofasico);
   
   return {
     sistema: {
@@ -237,9 +301,21 @@ export function calcularPropuesta(consumo: number): CalculosData {
       paneles: paneles,
       espacioTecho: espacioTecho,
       tamanoPanel: constants.PANEL_SIZE_WATTS,
-      inversores: inversores,
-      detalle_inversores: `Inversores marca SOLIS`,
-      roi: roi
+      inversores: infoInversor.cantidad,
+      detalle_inversores: `${infoInversor.cantidad}x ${infoInversor.marca} ${infoInversor.modelo}`,
+      roi: roi,
+      // NUEVOS CAMPOS para el EquiposTab
+      marcaPanel: infoPanel.marca,
+      modeloPanel: infoPanel.modelo,
+      potenciaPanel: infoPanel.potencia,
+      eficienciaPanel: infoPanel.eficiencia,
+      marcaInversor: infoInversor.marca,
+      modeloInversor: infoInversor.modelo,
+      potenciaInversor: infoInversor.potencia,
+      tipoInversor: esMonofasico ? "Monofásico" : "Trifásico",
+      eficienciaInversor: infoInversor.eficiencia,
+      cantidadInversores: infoInversor.cantidad,
+      esMonofasico: esMonofasico
     },
     financiero: {
       ahorro25Anos: ahorro25Anos,
