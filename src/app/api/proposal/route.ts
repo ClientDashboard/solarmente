@@ -1,8 +1,7 @@
+// src/app/api/proposal/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-// Corregir las rutas de importación para que coincidan con la estructura de tu proyecto
-import { sendClientProposalEmail, sendAdminNotificationEmail } from '../../../../../services/email';
-import { sendProposalMessage, initWhatsAppBot } from '../../../../../services/whatsapp-bot';
+import { sendClientProposalEmail, sendAdminNotificationEmail } from '../../../../services/email';
 
 // Inicializar Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -24,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Calcular ahorro estimado (ejemplo básico)
-    const costoActualEstimado = (consumo * 0.21); // $0.21 por kWh
+    const costoActualEstimado = consumo * 0.21; // $0.21 por kWh
     const ahorroEstimado = costoActualEstimado * 0.70; // 70% de ahorro
     
     // Guardar en base de datos
@@ -70,24 +69,6 @@ export async function POST(request: NextRequest) {
       propuestaUrl,
       ahorroEstimado
     });
-    
-    // Intentar enviar mensaje de WhatsApp
-    try {
-      // Iniciar el bot si aún no está iniciado
-      await initWhatsAppBot();
-      
-      // Enviar mensaje de WhatsApp
-      await sendProposalMessage({
-        telefono,
-        nombre,
-        propuestaUrl,
-        ahorroEstimado,
-        solicitudId
-      });
-    } catch (whatsappError) {
-      console.error('Error al enviar mensaje de WhatsApp:', whatsappError);
-      // No interrumpir el flujo si falla WhatsApp
-    }
     
     // Registrar en seguimientos
     await supabase

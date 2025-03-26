@@ -1,25 +1,38 @@
+// src/services/email.ts
 import nodemailer from 'nodemailer';
 
-// Configurar el transporte de email
+// Configurar el transporte de email usando Gmail
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: process.env.EMAIL_SECURE === 'true',
+  service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
+    user: process.env.EMAIL_USER,       // ventas@solarmente.io
+    pass: process.env.EMAIL_PASSWORD,     // contraseña o app password
   },
 });
 
+// Usar las variables de entorno para definir el remitente y el email del admin
+const FROM_EMAIL = process.env.EMAIL_FROM || 'ventas@solarmente.io';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@solarmente.io';
+
+export interface EmailOptions {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+}
+
+/**
+ * Envía un correo al cliente con la propuesta solar personalizada.
+ */
 export async function sendClientProposalEmail(options: {
   nombre: string;
   email: string;
   propuestaUrl: string;
   ahorroEstimado?: number;
-}) {
+}): Promise<any> {
   const { nombre, email, propuestaUrl, ahorroEstimado } = options;
   
-  // Crear HTML para email moderno
+  // HTML para el correo del cliente
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -29,7 +42,7 @@ export async function sendClientProposalEmail(options: {
       <title>Tu propuesta solar está lista</title>
       <style>
         body { 
-          font-family: 'Arial', sans-serif; 
+          font-family: Arial, sans-serif; 
           line-height: 1.6;
           color: #333333;
           margin: 0;
@@ -122,16 +135,15 @@ export async function sendClientProposalEmail(options: {
         </div>
         <div class="footer">
           <p>© ${new Date().getFullYear()} SolarMente. Todos los derechos reservados.</p>
-          <p>¿Preguntas? Contáctanos: ${process.env.EMAIL_FROM} | ${process.env.CONTACT_PHONE}</p>
+          <p>¿Preguntas? Contáctanos: ${FROM_EMAIL} | ${process.env.CONTACT_PHONE}</p>
         </div>
       </div>
     </body>
     </html>
   `;
   
-  // Enviar el email
   const info = await transporter.sendMail({
-    from: `"SolarMente" <${process.env.EMAIL_FROM}>`,
+    from: `"SolarMente" <${FROM_EMAIL}>`,
     to: email,
     subject: "¡Tu propuesta solar personalizada está lista! 🌞",
     html: htmlContent,
@@ -149,10 +161,9 @@ export async function sendAdminNotificationEmail(options: {
   consumo: number;
   propuestaUrl: string;
   ahorroEstimado?: number;
-}) {
+}): Promise<any> {
   const { nombre, email, telefono, tipoInstalacion, consumo, propuestaUrl, ahorroEstimado } = options;
   
-  // Crear contenido sencillo para el administrador
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Nueva solicitud de propuesta solar</h2>
@@ -171,10 +182,9 @@ export async function sendAdminNotificationEmail(options: {
     </div>
   `;
   
-  // Enviar el email
   const info = await transporter.sendMail({
-    from: `"Sistema SolarMente" <${process.env.EMAIL_FROM}>`,
-    to: process.env.ADMIN_EMAIL,
+    from: `"Sistema SolarMente" <${FROM_EMAIL}>`,
+    to: ADMIN_EMAIL,
     subject: `Nueva propuesta solar: ${nombre}`,
     html: htmlContent,
   });
