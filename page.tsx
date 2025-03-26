@@ -328,7 +328,7 @@ export default function ProyectosPage() {
                           className="max-w-[80%] max-h-[80%] object-contain"
                           onError={() => {
                             const updatedProject = {...project};
-                            updatedProject.logo = null;
+                            updatedProject.logo = '';
                           }}
                         />
                       </div>
