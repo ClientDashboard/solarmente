@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Mulish } from 'next/font/google'
 import { Analytics } from "@vercel/analytics/react"
+import IntercomSDK from '../components/intercom'
 
 // Configura la fuente Mulish
 const mulish = Mulish({
@@ -23,7 +24,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={mulish.variable}>
-      <body className={mulish.className}>{children}</body>
+      <body className={mulish.className}>
+        {children}
+        <Analytics />
+        {/* Componente de Intercom */}
+        <IntercomSDK />
+      </body>
     </html>
   )
 }

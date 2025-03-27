@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import '../../../styles/animations.css';
 import { createClient } from '@supabase/supabase-js';
+import { updateIntercomUser, trackIntercomEvent } from '../intercom';
 
 // Inicializar cliente de Supabase (ajusta si deseas usarlo para almacenar faseElectrica)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -170,17 +171,42 @@ export default function ProposalForm() {
       setIsSubmitting(true);
       
       try {
-        // Simulamos un retardo
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Formato correcto para el teléfono
+        const telefonoFormatted = `+507 ${formData.telefono}`;
         
-        // Generamos un ID temporal
-        const tempId = `temp-${Date.now()}`;
+        // Primero enviamos los datos a la API
+        const response = await fetch('/api/proposal', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            nombre: formData.nombre,
+            email: formData.email,
+            telefono: telefonoFormatted,
+            consumo: formData.consumo,
+            tipoPropiedad: formData.tipoPropiedad,
+            provincia: formData.provincia,
+            faseElectrica: formData.faseElectrica
+          }),
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Error al procesar la solicitud');
+        }
+  
+        const result = await response.json();
+        console.log('Propuesta guardada y correos enviados:', result);
         
-        // Construimos los parámetros de la URL, incluyendo faseElectrica
+        // Generamos un ID temporal o usamos el de la respuesta
+        const tempId = result.solicitudId || `temp-${Date.now()}`;
+        
+        // Construimos los parámetros de la URL
         const params = new URLSearchParams({
           id: tempId,
           nombre: formData.nombre,
-          telefono: `+507 ${formData.telefono}`,
+          telefono: telefonoFormatted,
           email: formData.email,
           consumo: formData.consumo.toString(),
           tipoPropiedad: formData.tipoPropiedad,
@@ -188,8 +214,45 @@ export default function ProposalForm() {
           faseElectrica: formData.faseElectrica
         }).toString();
         
+        // Actualizamos Intercom si está disponible
+        if (window.Intercom) {
+          window.Intercom('update', {
+            name: formData.nombre,
+            email: formData.email,
+            phone: telefonoFormatted,
+            custom_data: {
+              tipo_propiedad: formData.tipoPropiedad,
+              provincia: formData.provincia,
+              consumo_kwh: formData.consumo,
+              fase_electrica: formData.faseElectrica,
+              ahorro_estimado: calculateSavings(),
+              fecha_solicitud: new Date().toISOString()
+            }
+          });
+        }
+        
         // Redirigimos a la página de resultados
-        router.push(`/propuesta/resultado?${params}`);
+        
+      // Actualizamos Intercom con los datos del usuario
+      updateIntercomUser({
+        name: formData.nombre,
+        email: formData.email,
+        phone: '+507 ' + formData.telefono,
+        tipo_propiedad: formData.tipoPropiedad,
+        provincia: formData.provincia,
+        consumo_kwh: formData.consumo,
+        fase_electrica: formData.faseElectrica,
+        ahorro_estimado: calculateSavings(),
+        fecha_solicitud: new Date().toISOString()
+      });
+      
+      // Registrar evento de propuesta creada
+      trackIntercomEvent('propuesta_creada', {
+        consumo: formData.consumo,
+        ahorro_estimado: calculateSavings()
+      });
+      
+      router.push(`/propuesta/resultado?${params}`);
       } catch (error: any) {
         console.error('Error al procesar el formulario:', error);
         alert(`Hubo un error al procesar tu solicitud: ${error.message || 'Error desconocido'}`);
