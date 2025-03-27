@@ -164,3 +164,12 @@
 2025/03/26-04:42:13.710 b13b compacted to: files[ 0 0 1 0 0 0 0 ]
 2025/03/26-04:42:13.711 b13b Delete type=2 #44
 2025/03/26-04:42:13.711 b13b Delete type=2 #46
+2025/03/26-18:40:53.678 b1cb Level-0 table #49: started
+2025/03/26-18:40:53.697 b1cb Level-0 table #49: 1214243 bytes OK
+2025/03/26-18:40:53.714 b1cb Delete type=0 #45
+2025/03/26-18:57:58.702 9fa7 Compacting 1@1 + 1@2 files
+2025/03/26-18:57:58.736 9fa7 Generated table #50@1: 37376 keys, 1249942 bytes
+2025/03/26-18:57:58.736 9fa7 Compacted 1@1 + 1@2 files => 1249942 bytes
+2025/03/26-18:57:58.744 9fa7 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/03/26-18:57:58.744 9fa7 Delete type=2 #49
+2025/03/26-18:57:58.744 9fa7 Delete type=2 #47
