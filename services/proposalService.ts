@@ -20,36 +20,36 @@ export async function processProposal(formData: {
   faseElectrica: string;
 }) {
   try {
-    // Generate proposal URL
-    const queryParams = new URLSearchParams({
-      nombre: formData.nombre,
-      email: formData.email,
-      telefono: formData.telefono,
-      consumo: formData.consumo.toString(),
-      tipoPropiedad: formData.tipoPropiedad,
-      provincia: formData.provincia,
-      faseElectrica: formData.faseElectrica
-    });
-    const propuestaUrl = `https://solarmente.io/propuesta/resultado?${queryParams.toString()}`;
-    
     // Calculate estimated savings
     const ahorroEstimado = calculateEstimatedSavings(formData.consumo);
 
     // Prepare data for Supabase
     const proposalData = {
       ...formData,
-      propuesta_url: propuestaUrl,
       ahorro_estimado: ahorroEstimado,
       created_at: new Date().toISOString()
     };
 
-    // Save to Supabase
+    // Save to Supabase and get the ID
     const { data, error } = await supabase
       .from('solar_proposals')
       .insert([proposalData])
       .select();
 
     if (error) throw error;
+    
+    // Generate proposal URL with ID instead of query params
+    // Esta es una forma más segura y limpia de generar URLs
+    const proposalId = data[0].id;
+    const propuestaUrl = `https://solarmente.io/propuesta/${proposalId}`;
+    
+    // Update the record with the URL
+    const { error: updateError } = await supabase
+      .from('solar_proposals')
+      .update({ propuesta_url: propuestaUrl })
+      .eq('id', proposalId);
+      
+    if (updateError) throw updateError;
 
     // Send emails
     await Promise.all([
@@ -70,7 +70,7 @@ export async function processProposal(formData: {
       })
     ]);
 
-    return data;
+    return { ...data[0], propuesta_url: propuestaUrl };
   } catch (error) {
     console.error('Error procesando propuesta:', error);
     throw error;
