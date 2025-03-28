@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import FacturasModal from './components/FacturasModal';
+import Accordion from '@/app/Home/components/Accordion';
+
 // import './globals.css'; // Los estilos ya se importan en layout.tsx
 
 // Crea componentes para los iconos que necesitamos
@@ -42,6 +44,13 @@ const CheckCircleIcon = () => (
   </svg>
 );
 
+const ClockIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"></circle>
+    <polyline points="12 6 12 12 16 14"></polyline>
+  </svg>
+);
+
 // Definición de interfaces para tipos
 interface FacturasModalProps {
   isOpen: boolean;
@@ -52,14 +61,20 @@ interface FacturasModalProps {
 export default function HomeClient() {
   const router = useRouter();
   const [scrollY, setScrollY] = useState(0);
-  const [showAIDemo, setShowAIDemo] = useState(false);
   const [demoStep, setDemoStep] = useState(1);
   const [count, setCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState<string | null>(null);
-  const targetCount = 280; // Número de instalaciones
+  const targetCount = 180; // Número de instalaciones (cambiado de 280 a 180)
   const mainRef = useRef<HTMLDivElement>(null);
+  
+  // Valores para la animación de inyección cero
+  const [powerValues, setPowerValues] = useState({
+    pv: 5.4,
+    load: 5.5,
+    grid: 0.1
+  });
   
   // Función openModal con useCallback para evitar recreaciones innecesarias
   const openModal = useCallback((projectId: string) => {
@@ -91,21 +106,6 @@ export default function HomeClient() {
     openModal('dsv');
   }, [openModal]);
   
-  // Toggle AI Demo con useCallback
-  const toggleAIDemo = useCallback(() => {
-    setShowAIDemo(prev => !prev);
-    setDemoStep(1);
-  }, []);
-  
-  // Advance Demo con useCallback
-  const advanceDemo = useCallback(() => {
-    if (demoStep < 3) {
-      setDemoStep(prev => prev + 1);
-    } else {
-      setShowAIDemo(false);
-    }
-  }, [demoStep]);
-  
   useEffect(() => {
     // Efecto para la animación inicial
     const timer = setTimeout(() => {
@@ -131,10 +131,30 @@ export default function HomeClient() {
       });
     }, 80);
     
+    // Actualizar los valores de energía para la animación de inyección cero
+    const powerUpdateInterval = setInterval(() => {
+      // Generar valores aleatorios dentro de rangos específicos
+      // PV: Entre 5.2 y 5.6 kW
+      const pvValue = Number((5.2 + Math.random() * 0.4).toFixed(1));
+      
+      // Load: Entre 5.3 y 5.7 kW
+      const loadValue = Number((5.3 + Math.random() * 0.4).toFixed(1));
+      
+      // Grid siempre será la diferencia (asegurando inyección cero)
+      const gridValue = Number(Math.abs(loadValue - pvValue).toFixed(1));
+      
+      setPowerValues({
+        pv: pvValue,
+        load: loadValue,
+        grid: gridValue
+      });
+    }, 2000);
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(timer);
       clearInterval(counterInterval);
+      clearInterval(powerUpdateInterval);
     };
   }, []);
   
@@ -197,12 +217,12 @@ export default function HomeClient() {
             `,
             backgroundSize: '200px 300px, 200px 300px, 40px 60px, 40px 60px',
             backgroundPosition: '0 0, 0 0, -1px -1px, -1px -1px',
-            opacity: 0.7
+            opacity: 0.9
           }}></div>
           
           {/* Efecto reflejo panel solar */}
           <div className="absolute inset-0" style={{
-            background: 'radial-gradient(circle at 70% 20%, rgba(40, 80, 120, 0.2) 0%, transparent 70%)',
+            background: 'radial-gradient(circle at 70% 20%, rgba(119, 40, 120, 0.2) 0%, transparent 0%)',
             opacity: 0.7
           }}></div>
 
@@ -268,8 +288,8 @@ export default function HomeClient() {
             </div>
           </div>
           
-          {/* Stats flotantes */}
-          <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
+          {/* Stats flotantes - Modificada para incluir 4 cards (se añadió "12 años experiencia") */}
+          <div className="grid grid-cols-4 gap-4 max-w-4xl mx-auto">
             <div className="bg-gray-900/80 backdrop-blur-lg border border-gray-800 rounded-xl p-5 text-center transform hover:scale-105 transition-transform duration-300 hover:shadow-lg hover:shadow-solarmente-orange/5">
               <h3 className="text-2xl md:text-3xl font-bold text-white">30s</h3>
               <p className="text-xs md:text-sm text-gray-400">Propuesta IA</p>
@@ -281,6 +301,11 @@ export default function HomeClient() {
             <div className="bg-gray-900/80 backdrop-blur-lg border border-gray-800 rounded-xl p-5 text-center transform hover:scale-105 transition-transform duration-300 hover:shadow-lg hover:shadow-solarmente-orange/5">
               <h3 className="text-2xl md:text-3xl font-bold text-white">{formatNumber(count)}+</h3>
               <p className="text-xs md:text-sm text-gray-400">Instalaciones</p>
+            </div>
+            {/* Nuevo card de "12 años experiencia" */}
+            <div className="bg-gray-900/80 backdrop-blur-lg border border-gray-800 rounded-xl p-5 text-center transform hover:scale-105 transition-transform duration-300 hover:shadow-lg hover:shadow-solarmente-orange/5">
+              <h3 className="text-2xl md:text-3xl font-bold text-white">12</h3>
+              <p className="text-xs md:text-sm text-gray-400">Años Experiencia</p>
             </div>
           </div>
         </div>
@@ -294,133 +319,6 @@ export default function HomeClient() {
           </div>
         </div>
       </div>
-
-      {/* IA Cotizador Demo Modal */}
-      {showAIDemo && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fadeIn">
-            <div className="bg-gradient-to-r from-solarmente-orange to-solarmente-orange/90 p-4 text-white flex justify-between items-center">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <ZapIcon />
-                Cotizador SolarMente.AI
-              </h3>
-              <button 
-                onClick={toggleAIDemo}
-                className="text-white hover:text-gray-200 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="p-6">
-              {demoStep === 1 && (
-                <div className="space-y-6 animate-fadeIn">
-                  <h4 className="text-lg font-semibold text-white">Ingresa tus datos de consumo:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Consumo mensual (kWh)</label>
-                      <input type="text" defaultValue="850" className="mt-1 block w-full px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-solarmente-orange focus:border-transparent transition-all" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Factura mensual ($)</label>
-                      <input type="text" defaultValue="220" className="mt-1 block w-full px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-solarmente-orange focus:border-transparent transition-all" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Tipo de techo</label>
-                      <select className="mt-1 block w-full px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-solarmente-orange focus:border-transparent transition-all">
-                        <option>Techo metálico</option>
-                        <option>Techo de concreto</option>
-                        <option>Techo de tejas</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Ubicación</label>
-                      <select className="mt-1 block w-full px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-solarmente-orange focus:border-transparent transition-all">
-                        <option>Ciudad de Panamá</option>
-                        <option>Colón</option>
-                        <option>David</option>
-                        <option>Otro</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {demoStep === 2 && (
-                <div className="flex flex-col items-center justify-center py-12 animate-fadeIn">
-                  <div className="text-center">
-                    <div className="w-16 h-16 border-t-2 border-b-2 border-solarmente-orange rounded-full animate-spin mx-auto mb-6"></div>
-                    <h3 className="text-xl font-bold text-white mb-2">Analizando datos...</h3>
-                    <p className="text-gray-400">
-                      Nuestra IA está procesando tu información para crear una propuesta personalizada
-                    </p>
-                    <div className="w-full max-w-xs h-2 bg-gray-800 rounded-full mt-6 mx-auto overflow-hidden">
-                      <div className="h-full bg-solarmente-orange animate-pulse w-2/3"></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {demoStep === 3 && (
-                <div className="space-y-6 animate-fadeIn">
-                  <div className="bg-gray-800/50 border border-green-800/30 rounded-lg p-4 flex items-start">
-                    <div className="bg-green-800/20 rounded-full p-1 mr-3">
-                      <CheckCircleIcon />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-green-400">¡Propuesta lista!</h4>
-                      <p className="text-sm text-gray-400">Generada en 28 segundos por SolarMente.AI</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                    <h4 className="font-semibold text-white mb-4">Sistema recomendado para ti:</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div className="bg-gray-900/80 p-3 rounded border border-gray-700">
-                        <span className="text-sm text-gray-400">Capacidad del sistema</span>
-                        <p className="text-lg font-bold text-solarmente-orange">5.7 kW</p>
-                      </div>
-                      <div className="bg-gray-900/80 p-3 rounded border border-gray-700">
-                        <span className="text-sm text-gray-400">Paneles solares</span>
-                        <p className="text-lg font-bold text-solarmente-orange">14 x 410W</p>
-                      </div>
-                      <div className="bg-gray-900/80 p-3 rounded border border-gray-700">
-                        <span className="text-sm text-gray-400">Inversor</span>
-                        <p className="text-lg font-bold text-solarmente-orange">6kW Fronius</p>
-                      </div>
-                      <div className="bg-gray-900/80 p-3 rounded border border-gray-700">
-                        <span className="text-sm text-gray-400">Ahorro mensual estimado</span>
-                        <p className="text-lg font-bold text-green-500">$185</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-6">
-                      <h5 className="font-medium text-white mb-2">Inversión total:</h5>
-                      <div className="flex items-baseline">
-                        <span className="text-2xl font-bold text-solarmente-orange">$8,500</span>
-                        <span className="text-sm text-gray-400 ml-2">o desde $157/mes financiado</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex justify-center mt-8">
-                <button 
-                  onClick={advanceDemo}
-                  className="orange-button py-3 px-8 text-white font-bold rounded-lg transition-all duration-300 flex items-center"
-                >
-                  {demoStep === 3 ? 'Cerrar' : demoStep === 2 ? 'Ver Resultados' : 'Continuar'}
-                  {demoStep !== 2 && <ArrowRightIcon />}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Sección de Ahorro Garantizado con estilos oscuros */}
       <section className="py-20 bg-black border-t border-gray-900">
@@ -535,13 +433,13 @@ export default function HomeClient() {
                     style={{ backgroundImage: "url('/images/ai-dashboard.jpg')" }}
                   ></div>
                   
-                  {/* Overlay with code-like elements */}
+                  {/* Overlay with code-like elements - Traducido al español */}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 flex flex-col justify-end p-4">
                     <div className="text-solarmente-orange text-xs opacity-80 font-mono">
-                      <div>{">> initializing AI solar analysis"}</div>
-                      <div>{">> calculating optimal panel placement"}</div>
-                      <div>{">> estimating ROI and savings..."}</div>
-                      <div className="text-green-400">{">> proposal ready: 28.4 seconds"}</div>
+                      <div>{">> iniciando análisis solar con IA"}</div>
+                      <div>{">> calculando ubicación óptima de paneles"}</div>
+                      <div>{">> estimando ROI y ahorros..."}</div>
+                      <div className="text-green-400">{">> propuesta lista: 28.4 segundos"}</div>
                     </div>
                   </div>
                 </div>
@@ -555,197 +453,238 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* Sección de Proyectos con estilo oscuro */}
-      <section className="py-20 bg-black border-t border-gray-900">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col items-center mb-12">
-            <span className="bg-gray-900 text-solarmente-orange text-sm px-4 py-1 rounded-full border border-gray-800">EXPERIENCIA COMPROBADA</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-center mt-4 mb-2 relative">
-              <span className="text-white">Nuestros</span> <span className="text-solarmente-orange">Proyectos</span>
-              <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-solarmente-orange"></span>
-            </h2>
-            
-            <p className="text-center text-gray-400 max-w-2xl mt-6">
-              Más de {formatNumber(count)} instalaciones residenciales y comerciales respaldan nuestra experiencia.
-              Conoce algunos de nuestros proyectos destacados.
+     {/* Sección de Proyectos con estilo oscuro */}
+<section className="py-20 bg-black border-t border-gray-900">
+  <div className="container mx-auto px-4">
+    <div className="flex flex-col items-center mb-12">
+      <span className="bg-gray-900 text-solarmente-orange text-sm px-4 py-1 rounded-full border border-gray-800">
+        EXPERIENCIA COMPROBADA
+      </span>
+      <h2 className="text-3xl md:text-4xl font-bold text-center mt-4 mb-2 relative">
+        <span className="text-white">Nuestros</span> <span className="text-solarmente-orange">Proyectos</span>
+        <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-solarmente-orange"></span>
+      </h2>
+      <p className="text-center text-gray-400 max-w-2xl mt-6">
+        Más de {formatNumber(count)} instalaciones residenciales y comerciales respaldan nuestra experiencia.
+        Conoce algunos de nuestros proyectos destacados.
+      </p>
+    </div>
+
+    {/* Sustituye el flex horizontal por un grid de 4 columnas en escritorio */}
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Proyecto 1 - DSV */}
+      <div className="bg-gray-900/40 rounded-xl border border-gray-800 overflow-hidden group transition-all duration-300 hover:border-solarmente-orange/50 hover:shadow-xl h-full flex flex-col" id="dsv-project">
+        <div className="h-56 overflow-hidden relative">
+          <div
+            className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500 bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/38.jpg')" }}
+          ></div>
+          <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
+            <img
+              src="/images/dsv.jpg"
+              alt="DSV Logo"
+              className="max-w-[80%] max-h-[80%] object-contain"
+            />
+          </div>
+        </div>
+        <div className="p-5 flex flex-col flex-grow">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-lg font-semibold text-white">Proyecto Comercial - DSV</h3>
+            <span className="text-xs font-medium bg-solarmente-orange text-white px-4 py-1.5 rounded-full whitespace-nowrap">
+              218.36 kW
+            </span>
+          </div>
+          <div className="h-16 mb-4">
+            <p className="text-sm text-gray-400">
+              367 paneles solares de última generación con sistema de monitoreo en tiempo real.
             </p>
           </div>
-          
-          {/* Proyecto carrusel horizontal */}
-          <div className="flex space-x-6 pb-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide">
-            {/* Proyecto 1 - DSV */}
-<div className="flex-shrink-0 w-80 snap-center" id="dsv-project">
-  <div className="bg-gray-900/40 rounded-xl border border-gray-800 overflow-hidden group transition-all duration-300 hover:border-solarmente-orange/50 hover:shadow-xl h-full flex flex-col">
-    <div className="h-56 overflow-hidden relative">
-      {/* Imagen principal del proyecto */}
-      <div 
-        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500 bg-cover bg-center"
-        style={{ backgroundImage: "url('/images/38.jpg')" }}
-      ></div>
-      
-      {/* Logo overlay que ocupa todo el cuadro */}
-      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
-        <img 
-          src="/images/dsv.jpg" 
-          alt="DSV Logo" 
-          className="max-w-[80%] max-h-[80%] object-contain"
-        />
-      </div>
-    </div>
-    <div className="p-5 flex flex-col flex-grow">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-lg font-semibold text-white">Proyecto Comercial - DSV</h3>
-        <span className="text-xs font-medium bg-solarmente-orange text-white px-4 py-1.5 rounded-full whitespace-nowrap">218.36 kW</span>
-      </div>
-      
-      {/* Descripción alineada con altura fija */}
-      <div className="h-16 mb-4">
-        <p className="text-sm text-gray-400">367 paneles solares de última generación con sistema de monitoreo en tiempo real.</p>
-      </div>
-      
-      <div className="mt-auto">
-        <div className="flex justify-between text-sm mb-4">
-          <span className="text-gray-500">Ahorro mensual:</span>
-          <span className="font-bold text-green-500">$4,500</span>
-        </div>
-        <button 
-          onClick={handleOpenDsvModal}
-          className="w-full text-solarmente-orange hover:text-white inline-flex items-center justify-center text-sm font-medium py-2 border border-solarmente-orange/30 rounded-lg hover:bg-solarmente-orange transition-all duration-300"
-        >
-          Ver resultados de ahorro
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-            
-            {/* Proyecto 2 */}
-            <div className="flex-shrink-0 w-80 snap-center">
-              <div className="bg-gray-900/40 rounded-xl border border-gray-800 overflow-hidden group transition-all duration-300 hover:border-solarmente-orange/50 hover:shadow-xl h-full flex flex-col">
-                <div className="h-56 overflow-hidden relative">
-                  <div 
-                    className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/images/2.jpg')" }}
-                  ></div>
-                </div>
-                <div className="p-5 flex flex-col flex-grow">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-white">Casa - Costa del Este</h3>
-                    <span className="text-xs font-medium bg-solarmente-orange text-white px-4 py-1.5 rounded-full whitespace-nowrap">15.34 kW</span>
-                  </div>
-                  
-                  {/* Descripción alineada con altura fija */}
-                  <div className="h-16 mb-4">
-                    <p className="text-sm text-gray-400">26 paneles con sistema de batería de respaldo para cortes eléctricos.</p>
-                  </div>
-                  
-                  <div className="mt-auto">
-                    <div className="flex justify-between text-sm mb-4">
-                      <span className="text-gray-500">Ahorro mensual:</span>
-                      <span className="font-bold text-green-500">$450</span>
-                    </div>
-                    <button 
-                      className="w-full text-solarmente-orange hover:text-solarmente-orange/80 inline-flex items-center justify-center text-sm font-medium py-2 border border-solarmente-orange/30 rounded-lg hover:bg-solarmente-orange/10 transition-colors"
-                    >
-                      Ver resultados de ahorro
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
+          <div className="mt-auto">
+            <div className="flex justify-between text-sm mb-4">
+              <span className="text-gray-500">Ahorro mensual:</span>
+              <span className="font-bold text-green-500">$4,500</span>
             </div>
-            
-            {/* Proyecto 3 */}
-            <div className="flex-shrink-0 w-80 snap-center">
-              <div className="bg-gray-900/40 rounded-xl border border-gray-800 overflow-hidden group transition-all duration-300 hover:border-solarmente-orange/50 hover:shadow-xl h-full flex flex-col">
-                <div className="h-56 overflow-hidden relative">
-                  <div 
-                    className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/images/33.jpg')" }}
-                  ></div>
-                </div>
-                <div className="p-5 flex flex-col flex-grow">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-white">Casa - Santa Maria</h3>
-                    <span className="text-xs font-medium bg-solarmente-orange text-white px-4 py-1.5 rounded-full whitespace-nowrap">16.40 kW</span>
-                  </div>
-                  
-                  {/* Descripción alineada con altura fija */}
-                  <div className="h-16 mb-4">
-                    <p className="text-sm text-gray-400">40 paneles solares con sistema de monitoreo inteligente vía app móvil.</p>
-                  </div>
-                  
-                  <div className="mt-auto">
-                    <div className="flex justify-between text-sm mb-4">
-                      <span className="text-gray-500">Ahorro mensual:</span>
-                      <span className="font-bold text-green-500">$500</span>
-                    </div>
-                    <button 
-                      className="w-full text-solarmente-orange hover:text-solarmente-orange/80 inline-flex items-center justify-center text-sm font-medium py-2 border border-solarmente-orange/30 rounded-lg hover:bg-solarmente-orange/10 transition-colors"
-                    >
-                      Ver resultados de ahorro
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Proyecto 4 */}
-            <div className="flex-shrink-0 w-80 snap-center">
-              <div className="bg-gray-900/40 rounded-xl border border-gray-800 overflow-hidden group transition-all duration-300 hover:border-solarmente-orange/50 hover:shadow-xl h-full flex flex-col">
-                <div className="h-56 overflow-hidden relative">
-                  <div 
-                    className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/images/37.jpg')" }}
-                  ></div>
-                </div>
-                <div className="p-5 flex flex-col flex-grow">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-white">Casa - Costa del Este</h3>
-                    <span className="text-xs font-medium bg-solarmente-orange text-white px-4 py-1.5 rounded-full whitespace-nowrap">23.60 kW</span>
-                  </div>
-                  
-                  {/* Descripción alineada con altura fija */}
-                  <div className="h-16 mb-4">
-                    <p className="text-sm text-gray-400">40 paneles solares con sistema híbrido y 3 baterías de litio.</p>
-                  </div>
-                  
-                  <div className="mt-auto">
-                    <div className="flex justify-between text-sm mb-4">
-                      <span className="text-gray-500">Ahorro mensual:</span>
-                      <span className="font-bold text-green-500">$750</span>
-                    </div>
-                    <button 
-                      className="w-full text-solarmente-orange hover:text-solarmente-orange/80 inline-flex items-center justify-center text-sm font-medium py-2 border border-solarmente-orange/30 rounded-lg hover:bg-solarmente-orange/10 transition-colors"
-                    >
-                      Ver resultados de ahorro
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="text-center mt-10">
-            <Link 
-              href="/proyectos" 
-              className="inline-block orange-button py-3 px-8 rounded-lg shadow-lg transition-colors group flex items-center justify-center"
+            <button
+              onClick={handleOpenDsvModal}
+              className="w-full text-solarmente-orange hover:text-white inline-flex items-center justify-center text-sm font-medium py-2 border border-solarmente-orange/30 rounded-lg hover:bg-solarmente-orange transition-all duration-300"
             >
-              <span>Ver Todos los Proyectos</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              Ver resultados de ahorro
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 ml-1"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Proyecto 2 */}
+      <div className="bg-gray-900/40 rounded-xl border border-gray-800 overflow-hidden group transition-all duration-300 hover:border-solarmente-orange/50 hover:shadow-xl h-full flex flex-col">
+        <div className="h-56 overflow-hidden relative">
+          <div
+            className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500 bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/2.jpg')" }}
+          ></div>
+        </div>
+        <div className="p-5 flex flex-col flex-grow">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-lg font-semibold text-white">Casa - Costa del Este</h3>
+            <span className="text-xs font-medium bg-solarmente-orange text-white px-4 py-1.5 rounded-full whitespace-nowrap">
+              15.34 kW
+            </span>
+          </div>
+          <div className="h-16 mb-4">
+            <p className="text-sm text-gray-400">
+              26 paneles con sistema de batería de respaldo para cortes eléctricos.
+            </p>
+          </div>
+          <div className="mt-auto">
+            <div className="flex justify-between text-sm mb-4">
+              <span className="text-gray-500">Ahorro mensual:</span>
+              <span className="font-bold text-green-500">$450</span>
+            </div>
+            <button
+              className="w-full text-solarmente-orange hover:text-solarmente-orange/80 inline-flex items-center justify-center text-sm font-medium py-2 border border-solarmente-orange/30 rounded-lg hover:bg-solarmente-orange/10 transition-colors"
+            >
+              Ver resultados de ahorro
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 ml-1"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Proyecto 3 */}
+      <div className="bg-gray-900/40 rounded-xl border border-gray-800 overflow-hidden group transition-all duration-300 hover:border-solarmente-orange/50 hover:shadow-xl h-full flex flex-col">
+        <div className="h-56 overflow-hidden relative">
+          <div
+            className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500 bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/33.jpg')" }}
+          ></div>
+        </div>
+        <div className="p-5 flex flex-col flex-grow">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-lg font-semibold text-white">Casa - Santa Maria</h3>
+            <span className="text-xs font-medium bg-solarmente-orange text-white px-4 py-1.5 rounded-full whitespace-nowrap">
+              16.40 kW
+            </span>
+          </div>
+          <div className="h-16 mb-4">
+            <p className="text-sm text-gray-400">
+              40 paneles solares con sistema de monitoreo inteligente vía app móvil.
+            </p>
+          </div>
+          <div className="mt-auto">
+            <div className="flex justify-between text-sm mb-4">
+              <span className="text-gray-500">Ahorro mensual:</span>
+              <span className="font-bold text-green-500">$500</span>
+            </div>
+            <button
+              className="w-full text-solarmente-orange hover:text-solarmente-orange/80 inline-flex items-center justify-center text-sm font-medium py-2 border border-solarmente-orange/30 rounded-lg hover:bg-solarmente-orange/10 transition-colors"
+            >
+              Ver resultados de ahorro
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 ml-1"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Proyecto 4 */}
+      <div className="bg-gray-900/40 rounded-xl border border-gray-800 overflow-hidden group transition-all duration-300 hover:border-solarmente-orange/50 hover:shadow-xl h-full flex flex-col">
+        <div className="h-56 overflow-hidden relative">
+          <div
+            className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500 bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/37.jpg')" }}
+          ></div>
+        </div>
+        <div className="p-5 flex flex-col flex-grow">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-lg font-semibold text-white">Casa - Costa del Este</h3>
+            <span className="text-xs font-medium bg-solarmente-orange text-white px-4 py-1.5 rounded-full whitespace-nowrap">
+              23.60 kW
+            </span>
+          </div>
+          <div className="h-16 mb-4">
+            <p className="text-sm text-gray-400">
+              40 paneles solares con sistema híbrido y 3 baterías de litio.
+            </p>
+          </div>
+          <div className="mt-auto">
+            <div className="flex justify-between text-sm mb-4">
+              <span className="text-gray-500">Ahorro mensual:</span>
+              <span className="font-bold text-green-500">$750</span>
+            </div>
+            <button
+              className="w-full text-solarmente-orange hover:text-solarmente-orange/80 inline-flex items-center justify-center text-sm font-medium py-2 border border-solarmente-orange/30 rounded-lg hover:bg-solarmente-orange/10 transition-colors"
+            >
+              Ver resultados de ahorro
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 ml-1"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="text-center mt-10">
+      <Link
+        href="/proyectos"
+        className="inline-block orange-button py-3 px-8 rounded-lg shadow-lg transition-colors group flex items-center justify-center"
+      >
+        <span>Ver Todos los Proyectos</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 7l5 5m0 0l-5 5m5-5H6"
+          />
+        </svg>
             </Link>
           </div>
         </div>
@@ -759,6 +698,236 @@ export default function HomeClient() {
           />
         )}
       </section>
+
+      {/* NUEVA SECCIÓN: Inyección Cero */}
+      <section className="py-20 bg-black border-t border-gray-900">
+  <div className="container mx-auto px-4">
+    <div className="text-center mb-12">
+      <span className="text-sm text-solarmente-orange bg-gray-900 px-4 py-1 rounded-full border border-gray-800">INSTALACIÓN INMEDIATA</span>
+      <h2 className="text-3xl md:text-4xl font-bold mt-4 mb-4 text-white">
+        Instalación <span className="text-solarmente-orange">Rápida e Inmediata</span>
+      </h2>
+      <p className="text-gray-300 max-w-2xl mx-auto">
+        Te instalamos de inmediato en un lapso de 7 a 10 días hábiles después del primer abono. Ahorra desde el primer día con inyección cero mientras esperas los trámites.
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      {/* Card 1 */}
+      <div className="bg-gray-900/40 rounded-xl p-6 flex items-start space-x-4 border border-gray-800">
+        <div className="bg-solarmente-orange rounded-full p-3 text-white">
+          <ClockIcon />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-white mb-2">Instalación en Tiempo Récord</h3>
+          <p className="text-gray-400">
+            Te instalamos de inmediato en un lapso de 7 a 10 días hábiles después del primer abono.
+          </p>
+        </div>
+      </div>
+
+      {/* Card 2 */}
+      <div className="bg-gray-900/40 rounded-xl p-6 flex items-start space-x-4 border border-gray-800">
+        <div className="bg-solarmente-orange rounded-full p-3 text-white">
+          <ZapIcon />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-white mb-2">Ahorra desde el Primer Día</h3>
+          <p className="text-gray-400">
+            Ahorra con inyección cero mientras esperas los trámites y el cambio de medidor. ¡Mientras esperas, ahorras!
+          </p>
+        </div>
+      </div>
+
+      {/* Card 3 */}
+      <div className="bg-gray-900/40 rounded-xl p-6 flex items-start space-x-4 border border-gray-800">
+        <div className="bg-solarmente-orange rounded-full p-3 text-white">
+          <BarChartIcon />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-white mb-2">Ahorro Sustancial</h3>
+          <p className="text-gray-400">
+            Se puede ahorrar entre un 50% al 70% en tu factura eléctrica mensual.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      {/* Left Side - Zero Injection Explanation */}
+      <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-800">
+        <h3 className="text-2xl font-semibold text-white mb-4">¿Qué es la Inyección Cero?</h3>
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-semibold text-solarmente-orange mb-2">¿Qué es la inyección cero?</h4>
+            <p className="text-gray-400">
+              Se refiere a la función que permite que un sistema fotovoltaico limite la energía que se vierte a la red eléctrica, ajustando la producción para que no haya excedentes.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-solarmente-orange mb-2">¿Cómo funciona?</h4>
+            <p className="text-gray-400">
+              El inversor ajusta la producción de energía para que se consuma dentro de la propiedad y no se envíe a la red.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-solarmente-orange mb-2">¿Es legal?</h4>
+            <p className="text-gray-400">
+              Sí, es totalmente legal. 
+              Es importante tener en cuenta que un sistema con Inyección Cero está diseñado para aprovechar la energía generada durante las horas de sol, adaptando la producción fotovoltaica al consumo instantáneo de la propiedad. Por tanto, su función principal es cubrir la demanda diurna, cuando hay generación solar.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Energy Flow Video */}
+      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg">
+        <h3 className="text-xl font-semibold text-center mb-6 text-black">Flujo de Energía con Inyección Cero</h3>
+        
+        <div className="relative flex justify-center items-center overflow-hidden rounded-lg h-64">
+        <video
+  src="/videos/cero.mp4"
+  autoPlay
+  loop
+  muted
+  playsInline
+  className="relative w-1/2 h-auto"
+  style={{
+    mixBlendMode: 'multiply'
+  }}
+/>
+        </div>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-700 leading-relaxed">
+            En este diagrama de inyección cero, observamos cómo un sistema solar inteligente optimiza el consumo energético:
+          </p>
+          <ul className="text-sm text-gray-600 list-disc list-inside mt-2 text-left inline-block">
+            <li>Generación Solar: 5.04 kW de los paneles solares</li>
+            <li>Consumo del Hogar: 5.94 kW de demanda total</li>
+            <li>Aporte de la Red: 0.9 kW para completar la necesidad energética</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{/* NUEVA SECCIÓN: Inyección Excedente */}
+<section className="py-20 bg-black border-t border-gray-900">
+  <div className="container mx-auto px-4">
+    <div className="text-center mb-12">
+      <span className="text-sm text-solarmente-orange bg-gray-900 px-4 py-1 rounded-full border border-gray-800">SISTEMA ON-GRID</span>
+      <h2 className="text-3xl md:text-4xl font-bold mt-4 mb-4 text-white">
+        Ahorre <span className="text-solarmente-orange">hasta un 100% en su factura de luz!</span>
+      </h2>
+      <p className="text-gray-300 max-w-2xl mx-auto">
+       Despues de tener los permisos aprobados y de haber usado el sistema en inyeccion cero ahorrando mientras esperabas ya podras utilizar el sistema ON-GRID y ahorrar al 100%
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      {/* Card 1 */}
+      <div className="bg-gray-900/40 rounded-xl p-6 flex items-start space-x-4 border border-gray-800">
+        <div className="bg-solarmente-orange rounded-full p-3 text-white">
+          <ClockIcon />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-white mb-2">Instalación en Tiempo Récord</h3>
+          <p className="text-gray-400">
+            Despues de esperar 3 a 4 meses tendras tu sistema funcionando al 100%.
+          </p>
+        </div>
+      </div>
+
+      {/* Card 2 */}
+      <div className="bg-gray-900/40 rounded-xl p-6 flex items-start space-x-4 border border-gray-800">
+        <div className="bg-solarmente-orange rounded-full p-3 text-white">
+          <ZapIcon />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-white mb-2">Ahorra en grande</h3>
+          <p className="text-gray-400">
+            Dsifruta del ahorro y de no tener que pagar mas luz a las compañias!
+          </p>
+        </div>
+      </div>
+
+      {/* Card 3 */}
+      <div className="bg-gray-900/40 rounded-xl p-6 flex items-start space-x-4 border border-gray-800">
+        <div className="bg-solarmente-orange rounded-full p-3 text-white">
+          <BarChartIcon />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-white mb-2">Monitoreo</h3>
+          <p className="text-gray-400">
+           Monitorea tu sistema con nuestra medicion inteligente atravez de WIFI.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      {/* Left Side - Zero Injection Explanation */}
+      <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-800">
+        <h3 className="text-2xl font-semibold text-white mb-4">¿Qué es una instalacion ONGRID?</h3>
+        <div className="space-y-4">
+          <div>
+            <p className="text-gray-400">
+            El sistema ON-GRID está conectado a la red eléctrica a través de un inversor que convierte la corriente continua (DC) generada por los paneles solares en corriente alterna (AC) compatible con la red.
+
+            </p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-solarmente-orange mb-2">¿Usa baterias?</h4>
+            <p className="text-gray-400">
+          A diferencia de los sistemas OFF-GRID, los sistemas ON-GRID generalmente no requieren baterías para almacenar energía, ya que la energía generada se consume directamente o se inyecta a la red.
+            </p>
+          </div>
+          <p className="text-gray-400"></p>
+          Cuando el sistema solar produce más energía de la que se consume en el momento, el excedente se inyecta a la red eléctrica. sto puede generar créditos o compensaciones en la factura eléctrica.
+          
+          <div>
+            <h4 className="font-semibold text-solarmente-orange mb-2">¿Qué sucede si hay un corte de energía y yo tengo un sistema on grid funcionando?</h4>
+            <p className="text-gray-400">
+              El sistema se cae dada su sincronización con la red y el sistema eléctrico. Te quedarias sin luz. 
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Energy Flow Video */}
+      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg">
+        <h3 className="text-xl font-semibold text-center mb-6 text-black">Flujo de Energía con Sistema ONGRID</h3>
+        
+        <div className="relative flex justify-center items-center overflow-hidden rounded-lg h-70">
+        <video
+  src="/videos/excedente.mp4"
+  autoPlay
+  loop
+  muted
+  playsInline
+  className="relative w-1/2 h-auto"
+  style={{
+    mixBlendMode: 'multiply'
+  }}
+/>
+        </div>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-700 leading-relaxed">
+            En este diagrama observamos un sistema ONGRID, vemos como el sistema solar genera excedente de energia a la red:
+          </p>
+          <ul className="text-sm text-gray-600 list-disc list-inside mt-2 text-left inline-block">
+            <li>Generación Solar: 66.38 kW de los paneles solares</li>
+            <li>Consumo del Hogar o Comercio: 18.18 kW de demanda total</li>
+            <li>Excedente de energia a la red: 48.2 kW </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
       {/* Call to Action Mejorado con estilo oscuro */}
       <section className="py-20 bg-black relative overflow-hidden border-t border-gray-900">

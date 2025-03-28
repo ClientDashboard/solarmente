@@ -36,3 +36,15 @@
 2025/03/26-20:13:17.523 b1cb Level-0 table #22: started
 2025/03/26-20:13:17.528 b1cb Level-0 table #22: 14175 bytes OK
 2025/03/26-20:13:17.536 b1cb Delete type=0 #19
+2025/03/27-08:58:18.120 11d73 Level-0 table #24: started
+2025/03/27-08:58:18.126 11d73 Level-0 table #24: 16348 bytes OK
+2025/03/27-08:58:18.134 11d73 Delete type=0 #21
+2025/03/27-08:58:18.137 11d73 Compacting 4@0 + 1@1 files
+2025/03/27-08:58:18.141 11d73 Generated table #25@0: 98 keys, 4014 bytes
+2025/03/27-08:58:18.141 11d73 Compacted 4@0 + 1@1 files => 4014 bytes
+2025/03/27-08:58:18.146 11d73 compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/03/27-08:58:18.147 11d73 Delete type=2 #16
+2025/03/27-08:58:18.147 11d73 Delete type=2 #20
+2025/03/27-08:58:18.147 11d73 Delete type=2 #22
+2025/03/27-08:58:18.147 11d73 Delete type=2 #18
+2025/03/27-08:58:18.147 11d73 Delete type=2 #24

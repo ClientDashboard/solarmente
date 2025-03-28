@@ -12,6 +12,7 @@
     "@intercom/messenger-js-sdk": "^0.0.14",
     "@open-wa/wa-automate": "^4.76.0",
     "@sendgrid/mail": "^8.1.4",
+    "@shadcn/ui": "^0.0.4",
     "@supabase/supabase-js": "^2.49.1",
     "@vercel/analytics": "^1.5.0",
     "chart.js": "^4.4.8",

@@ -1,5 +1,5 @@
 import IntercomSDK from './IntercomSDK';
-import { updateIntercomUser, trackIntercomEvent } from './IntercomHelper';
+import { updateIntercomUser as helperUpdateUser, trackIntercomEvent as helperTrackEvent } from './IntercomHelper';
 
 // Funciones helper adaptadas al SDK oficial
 export function updateIntercomUser(userData: {
@@ -41,6 +41,8 @@ export function trackIntercomEvent(eventName: string, metadata?: Record<string, 
   return false;
 }
 
+// También exportas las versiones importadas con sus nuevos nombres
+export { helperUpdateUser, helperTrackEvent };
 export { IntercomSDK };
 
 // Exportación por defecto
