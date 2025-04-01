@@ -430,7 +430,7 @@ export default function HomeClient() {
                   {/* Usamos div con background-image en lugar de Image para simplificar */}
                   <div 
                     className="w-full h-64 md:h-80 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/images/ai-dashboard.jpg')" }}
+                    
                   ></div>
                   
                   {/* Overlay with code-like elements - Traducido al español */}
@@ -869,32 +869,39 @@ export default function HomeClient() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
       {/* Left Side - Zero Injection Explanation */}
       <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-800">
-        <h3 className="text-2xl font-semibold text-white mb-4">¿Qué es una instalacion ONGRID?</h3>
-        <div className="space-y-4">
-          <div>
-            <p className="text-gray-400">
-            El sistema ON-GRID está conectado a la red eléctrica a través de un inversor que convierte la corriente continua (DC) generada por los paneles solares en corriente alterna (AC) compatible con la red.
+  <h3 className="text-2xl font-bold text-solarmente-orange mb-4">
+    ¿Qué es una instalación ONGRID?
+  </h3>
 
-            </p>
-          </div>
-          <div>
-            <h4 className="font-semibold text-solarmente-orange mb-2">¿Usa baterias?</h4>
-            <p className="text-gray-400">
-          A diferencia de los sistemas OFF-GRID, los sistemas ON-GRID generalmente no requieren baterías para almacenar energía, ya que la energía generada se consume directamente o se inyecta a la red.
-            </p>
-          </div>
-          <p className="text-gray-400"></p>
-          Cuando el sistema solar produce más energía de la que se consume en el momento, el excedente se inyecta a la red eléctrica. sto puede generar créditos o compensaciones en la factura eléctrica.
-          
-          <div>
-            <h4 className="font-semibold text-solarmente-orange mb-2">¿Qué sucede si hay un corte de energía y yo tengo un sistema on grid funcionando?</h4>
-            <p className="text-gray-400">
-              El sistema se cae dada su sincronización con la red y el sistema eléctrico. Te quedarias sin luz. 
-            </p>
-          </div>
-        </div>
-      </div>
+  <p className="text-gray-300 leading-relaxed mb-4">
+    El <strong>sistema ON-GRID</strong> está conectado a la red eléctrica a través de un inversor 
+    que convierte la corriente continua (<strong>DC</strong>) generada por los paneles solares 
+    en corriente alterna (<strong>AC</strong>) compatible con la red.
+  </p>
 
+  <h4 className="text-xl font-semibold text-solarmente-orange mb-2">
+    ¿Usa baterías?
+  </h4>
+  <p className="text-gray-300 mb-4">
+    A diferencia de los sistemas <strong>OFF-GRID</strong>, los sistemas ON-GRID generalmente 
+    <em> no requieren baterías</em> para almacenar energía, ya que la energía generada se consume 
+    directamente o se inyecta a la red.
+  </p>
+  <p className="text-gray-300 mb-4">
+    Cuando el sistema solar produce más energía de la que se consume en ese momento, 
+    el excedente se inyecta a la red eléctrica. Esto puede generar 
+    <strong> créditos o compensaciones</strong> en la factura eléctrica.
+  </p>
+
+  <h4 className="text-xl font-semibold text-solarmente-orange mb-2">
+    ¿Qué sucede si hay un corte de energía y tengo un sistema ON-GRID funcionando?
+  </h4>
+  <p className="text-gray-300 mb-4">
+    El sistema se detiene porque depende de la sincronización con la red. 
+    <strong>Te quedarías sin luz</strong>, a menos que cuentes con baterías de respaldo 
+    (que ya sería un sistema híbrido).
+  </p>
+</div>
       {/* Right Side - Energy Flow Video */}
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg">
         <h3 className="text-xl font-semibold text-center mb-6 text-black">Flujo de Energía con Sistema ONGRID</h3>
@@ -929,8 +936,8 @@ export default function HomeClient() {
 </section>
 
 
-      {/* Call to Action Mejorado con estilo oscuro */}
-      <section className="py-20 bg-black relative overflow-hidden border-t border-gray-900">
+       {/* Call to Action Mejorado con estilo oscuro */}
+       <section className="py-20 bg-black relative overflow-hidden border-t border-gray-900">
         <div className="absolute inset-0">
           <div className="moving-line-h line-h1"></div>
           <div className="moving-line-h line-h2"></div>
@@ -983,6 +990,28 @@ export default function HomeClient() {
                 Garantía de 30 años
               </span>
             </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Sección de Términos y Condiciones */}
+      <section className="py-8 bg-black border-t border-gray-900">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center">
+            <button 
+              onClick={() => router.push('/terminos-condiciones')}
+              className="text-gray-400 hover:text-solarmente-orange transition-colors duration-300 mb-4 text-sm font-medium flex items-center gap-2"
+            >
+              <span>Términos y Condiciones</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+            
+            <p className="text-xs text-gray-600 text-center max-w-2xl">
+              © 2025 SolarMente. Todos los derechos reservados. Al utilizar nuestros servicios, aceptas nuestros términos y condiciones.
+              SolarMente es una marca registrada. Somos especialistas en energía solar con tecnología de Inteligencia Artificial.
+            </p>
           </div>
         </div>
       </section>

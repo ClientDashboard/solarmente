@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title | default('SolarMente') }}</title>
+    <style>
+      /* Estilos base para emails.
+         Estos estilos serán combinados con los de Tailwind y convertidos a inline por Maizzle. */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #111827;
+        color: #ffffff;
+        font-family: 'Mulish', sans-serif;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      img {
+        display: block;
+        border: 0;
+        max-width: 100%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td align="center" style="padding: 20px;">
+          <!-- Contenedor principal -->
+          <table role="presentation" width="600" class="bg-gray-900 rounded-lg overflow-hidden">
+            <!-- Encabezado -->
+            <tr>
+              <td align="center" style="padding: 20px; background-color: #000;">
+                <img src="https://www.solarmente.io/images/logo.png" alt="Logo SolarMente" width="150">
+              </td>
+            </tr>
+            <!-- Contenido dinámico -->
+            <tr>
+              <td style="padding: 30px;">
+                {{ content }}
+              </td>
+            </tr>
+            <!-- Pie de página -->
+            <tr>
+              <td align="center" style="padding: 20px; font-size: 12px; color: #9ca3af; background-color: #000;">
+                <p style="margin: 0;">© 2023 SolarMente. Todos los derechos reservados.</p>
+                <p style="margin: 0;">
+                  <a href="https://www.solarmente.io" style="color: #FF671F; text-decoration: none;">
+                    Visita nuestro sitio web
+                  </a>
+                </p>
+              </td>
+            </tr>
+          </table>
+          <!-- Fin del contenedor principal -->
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

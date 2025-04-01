@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolarMente - Tu Propuesta Solar</title>
+  <style>
+    /* General Reset & Styles */
+    body, p, h1, h2, h3, a { margin: 0; padding: 0; }
+    body { background-color: #000000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+    .container { max-width: 600px; margin: 20px auto; background-color: #111111; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(255,103,31,0.2); }
+    .header { background-color: #111111; padding: 30px 20px; text-align: center; border-bottom: 1px solid #222222; }
+    .header img { max-width: 180px; margin-bottom: 20px; }
+    .header h1 { font-size: 32px; color: #ffffff; margin-top: 10px; }
+    .header .highlight { color: #FF671F; }
+    .tagline { font-size: 16px; color: #cccccc; margin-top: 5px; }
+    .hero { background-color: #1a1a1a; padding: 40px 20px; text-align: center; border-bottom: 1px solid #222222; }
+    .hero h2 { font-size: 26px; color: #ffffff; margin-bottom: 16px; }
+    .hero .highlight { color: #FF671F; }
+    .hero p { font-size: 18px; color: #cccccc; line-height: 1.6; }
+    .content { padding: 40px 20px; color: #cccccc; background-color: #0f0f0f; }
+    .content h2 { font-size: 22px; margin-bottom: 20px; color: #ffffff; }
+    .content p { font-size: 16px; line-height: 1.6; margin-bottom: 20px; }
+    .saving-box {
+      background-color: #1a1a1a;
+      border: 1px solid #333333;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .saving-box .amount {
+      font-size: 36px;
+      font-weight: bold;
+      color: #FF671F;
+    }
+    .saving-box .label {
+      font-size: 14px;
+      color: #bbbbbb;
+      margin-top: 5px;
+    }
+    .cta-button {
+      display: block;
+      width: 80%;
+      max-width: 300px;
+      margin: 30px auto;
+      padding: 16px;
+      background: linear-gradient(90deg, #FF671F 0%, #FF8B3D 100%);
+      color: #ffffff !important;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+    }
+    /* WhatsApp button overrides */
+    .whatsapp-button {
+      background: linear-gradient(90deg, #25D366 0%, #128C7E 100%) !important;
+      margin-top: 15px;
+    }
+    .animated-border {
+      position: relative;
+      overflow: hidden;
+    }
+    .animated-border::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #FF671F, transparent);
+      animation: animate 4s linear infinite;
+    }
+    @keyframes animate {
+      0% { left: -100%; }
+      50% { left: 100%; }
+      100% { left: 100%; }
+    }
+    .footer { background-color: #080808; text-align: center; padding: 30px 20px; font-size: 14px; color: #777777; border-top: 1px solid #222222; }
+    .metrics {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin: 30px auto;
+      max-width: 500px;
+    }
+    .metric-item {
+      flex: 1;
+      min-width: 120px;
+      margin: 10px;
+      background-color: #1a1a1a;
+      border-radius: 10px;
+      padding: 15px 10px;
+      border: 1px solid #333333;
+    }
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #FF671F;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #aaaaaa;
+      margin-top: 5px;
+    }
+    @media only screen and (max-width: 600px) {
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+      }
+      .container {
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        max-width: none !important;
+      }
+      .header img {
+        max-width: 150px;
+      }
+      .header h1 {
+        font-size: 28px;
+      }
+      .hero h2 {
+        font-size: 24px;
+      }
+      .hero p {
+        font-size: 16px;
+      }
+      .content {
+        padding: 20px 15px;
+      }
+      .content h2 {
+        font-size: 20px;
+      }
+      .content p {
+        font-size: 15px;
+      }
+      .saving-box .amount {
+        font-size: 30px;
+      }
+      .metrics {
+        flex-direction: column;
+        align-items: center;
+      }
+      .metric-item {
+        width: 90%;
+        margin: 10px 0;
+        text-align: center;
+      }
+      .metric-value {
+        font-size: 24px;
+      }
+      .cta-button {
+        width: 90%;
+        font-size: 16px;
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <table role="presentation" width="100%" style="background-color: #000000; padding: 20px 0;">
+    <tr>
+      <td align="center">
+        <table class="container" role="presentation" cellpadding="0" cellspacing="0" width="600">
+          <!-- Header with Logo and Tagline -->
+          <tr>
+            <td class="header">
+              <img src="https://solarmente.io/images/logo.png" alt="SolarMente Logo" style="display: block; margin: 0 auto; width: 180px; height: auto;">
+              <h1>Solar<span class="highlight">Mente</span><span class="highlight" style="font-weight: 300;">.AI</span></h1>
+              <div class="tagline">Cambiando la forma de cotizar, comprar e instalar paneles solares</div>
+            </td>
+          </tr>
+          <!-- Hero Section -->
+          <tr>
+            <td class="hero animated-border">
+              <h2>¡Tu propuesta solar está <span class="highlight">lista</span>!</h2>
+              <p>Ahorra hasta un 100% en tu factura eléctrica con energía limpia y renovable.</p>
+            </td>
+          </tr>
+          <!-- Main Content -->
+          <tr>
+            <td class="content">
+              <h2>Hola, <strong>{{clienteNombre}}</strong>,</h2>
+              <p>
+                Hemos preparado una propuesta solar personalizada basada en tu consumo mensual.
+                Con nuestro sistema, podrías ahorrar aproximadamente:
+              </p>
+              
+              <div class="saving-box">
+                <div class="amount">${{ahorroEstimado}}</div>
+                <div class="label">AHORRO MENSUAL ESTIMADO</div>
+              </div>
+              
+              <div class="metrics">
+                <div class="metric-item">
+                  <div class="metric-value">30s</div>
+                  <div class="metric-label">PROPUESTA IA</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-value">100%</div>
+                  <div class="metric-label">AHORRO POSIBLE</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-value">12</div>
+                  <div class="metric-label">AÑOS EXPERIENCIA</div>
+                </div>
+              </div>
+              
+              <p style="text-align: center; font-size: 18px; font-weight: bold; color: #ffffff;">
+                ¿Listo para cambiar a energía solar inteligente?
+              </p>
+              
+              <p style="text-align: center;">
+                <a href="{{proposalUrl}}" class="cta-button" style="color: #ffffff !important;">Ver mi propuesta solar</a>
+              </p>
+              
+              <p style="text-align: center;">
+                <a href="https://wa.me/50764143255?text=Hola%20SolarMente,%20quisiera%20más%20información%20sobre%20mi%20propuesta" class="cta-button whatsapp-button" style="color: #ffffff !important;">
+                  Contactar por WhatsApp
+                </a>
+              </p>
+              
+              <p style="text-align: center; font-size: 14px; color: #999999; margin-top: 30px;">
+                Si tienes alguna pregunta, responde a este correo o llámanos al <strong>+507 6414-3255</strong>.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td class="footer">
+              <p>© 2025 SolarMente. Todos los derechos reservados.</p>
+              <p style="margin-top: 10px;">Primera empresa en Panamá que combina energía solar con IA avanzada.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -6,12 +6,10 @@ import '../../../styles/animations.css';
 import { createClient } from '@supabase/supabase-js';
 import { updateIntercomUser, trackIntercomEvent } from '../intercom';
 
-// Inicializar cliente de Supabase (ajusta si deseas usarlo para almacenar faseElectrica)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Provincias de Panamá
 const PROVINCIAS = [
   'Bocas del Toro',
   'Chiriquí',
@@ -35,7 +33,6 @@ interface FormData {
   consumo: number;
   tipoPropiedad: 'residencial' | 'comercial';
   provincia: string;
-  // Nueva propiedad para monofásico / trifásico
   faseElectrica: 'monofasico' | 'trifasico';
 }
 
@@ -50,8 +47,6 @@ export default function ProposalForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
-  
-  // Estado inicial con faseElectrica por defecto "monofasico"
   const [formData, setFormData] = useState<FormData>({
     nombre: '',
     telefono: '',
@@ -59,25 +54,54 @@ export default function ProposalForm() {
     consumo: 1000,
     tipoPropiedad: 'residencial',
     provincia: 'Panamá',
-    faseElectrica: 'monofasico', // Valor por defecto
+    faseElectrica: 'monofasico',
   });
-  
   const [errors, setErrors] = useState<FormErrors>({
     nombre: '',
     telefono: '',
     email: '',
     provincia: '',
   });
-  
   const [animationComplete, setAnimationComplete] = useState(false);
   const progressBarRef = useRef<HTMLDivElement>(null);
 
-  // Efecto para animación inicial
+  // Log para confirmar que el componente se montó
+  useEffect(() => {
+    console.log('ProposalForm mounted.');
+  }, []);
+
+  // Handler para la tecla Enter (añadiendo logs)
+  useEffect(() => {
+    const handleEnterKey = (e: KeyboardEvent) => {
+      console.log('Key pressed:', e.key);
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('Enter key detected at step:', activeStep);
+      if (activeStep < 4) {
+        const isValid = validateStep(activeStep);
+        console.log('Step validation result:', isValid);
+        if (isValid) {
+          console.log('Moving to next step');
+          nextStep();
+        }
+      } else if (activeStep === 4 && !isSubmitting) {
+        console.log('Submitting form via Enter key');
+        const fakeEvent = new Event('submit', { cancelable: true }) as any;
+        handleSubmit(fakeEvent);
+      }
+    };
+
+    document.addEventListener('keydown', handleEnterKey, true);
+    return () => document.removeEventListener('keydown', handleEnterKey, true);
+  }, [activeStep, isSubmitting]);
+
+  // Animation de entrada
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimationComplete(true);
+      console.log('Animation complete.');
     }, 1000);
-    
     return () => clearTimeout(timer);
   }, []);
 
@@ -87,26 +111,19 @@ export default function ProposalForm() {
       ...formData,
       [name]: name === 'consumo' ? parseInt(value) : value,
     });
-    
-    // Clear error cuando el usuario escribe
     if (errors[name as keyof FormErrors]) {
-      setErrors({
-        ...errors,
-        [name]: '',
-      });
+      setErrors({ ...errors, [name]: '' });
     }
+    console.log(`Field ${name} changed to:`, value);
   };
 
   const validateStep = (step: number): boolean => {
     let isValid = true;
     const newErrors = { ...errors };
-
     if (step === 1) {
       if (!formData.nombre.trim()) {
         newErrors.nombre = 'El nombre es requerido';
         isValid = false;
-      } else {
-        newErrors.nombre = '';
       }
     } else if (step === 2) {
       if (!formData.telefono.trim()) {
@@ -115,150 +132,123 @@ export default function ProposalForm() {
       } else if (!/^\d{8}$/.test(formData.telefono)) {
         newErrors.telefono = 'Ingrese un número de teléfono válido (8 dígitos)';
         isValid = false;
-      } else {
-        newErrors.telefono = '';
       }
-      
       if (!formData.email.trim()) {
         newErrors.email = 'El email es requerido';
         isValid = false;
       } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
         newErrors.email = 'Ingrese un email válido';
         isValid = false;
-      } else {
-        newErrors.email = '';
       }
     } else if (step === 3) {
       if (!formData.provincia) {
         newErrors.provincia = 'Seleccione una provincia';
         isValid = false;
-      } else {
-        newErrors.provincia = '';
       }
     }
-
     setErrors(newErrors);
+    console.log(`Validation for step ${step}:`, newErrors);
     return isValid;
   };
 
   const nextStep = () => {
     if (validateStep(activeStep)) {
+      console.log('Proceeding to next step from step:', activeStep);
       setActiveStep(activeStep + 1);
     }
   };
 
   const prevStep = () => {
+    console.log('Returning to previous step from step:', activeStep);
     setActiveStep(activeStep - 1);
   };
 
-  // Cálculo simplificado de ahorro mensual
   const calculateSavings = (): number => {
-    const tarifaPromedio = 0.26; // $0.26/kWh
+    const tarifaPromedio = 0.26;
     const ahorroMensual = formData.consumo * tarifaPromedio;
     return Math.round(ahorroMensual);
   };
-  
+
   const formatNumber = (num: number): string => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
-  
+
   const estimatedSavings = calculateSavings();
+  console.log('Estimated Savings:', estimatedSavings);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (validateStep(activeStep)) {
-      setIsSubmitting(true);
+    if (!validateStep(activeStep)) return;
+    setIsSubmitting(true);
+    try {
+      const telefonoFormatted = `+507 ${formData.telefono}`;
+      console.log('Submitting form with data:', {
+        nombre: formData.nombre,
+        email: formData.email,
+        telefono: telefonoFormatted,
+        consumo: formData.consumo,
+        tipoPropiedad: formData.tipoPropiedad,
+        provincia: formData.provincia,
+        faseElectrica: formData.faseElectrica
+      });
       
-      try {
-        // Formato correcto para el teléfono
-        const telefonoFormatted = `+507 ${formData.telefono}`;
-        
-        // Primero enviamos los datos a la API
-        const response = await fetch('/api/proposal', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            nombre: formData.nombre,
-            email: formData.email,
-            telefono: telefonoFormatted,
-            consumo: formData.consumo,
-            tipoPropiedad: formData.tipoPropiedad,
-            provincia: formData.provincia,
-            faseElectrica: formData.faseElectrica
-          }),
-        });
-  
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Error al procesar la solicitud');
-        }
-  
-        const result = await response.json();
-        console.log('Propuesta guardada y correos enviados:', result);
-        
-        // Generamos un ID temporal o usamos el de la respuesta
-        const tempId = result.solicitudId || `temp-${Date.now()}`;
-        
-        // Construimos los parámetros de la URL
-        const params = new URLSearchParams({
-          id: tempId,
+      const response = await fetch('/api/proposal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           nombre: formData.nombre,
-          telefono: telefonoFormatted,
           email: formData.email,
-          consumo: formData.consumo.toString(),
+          telefono: telefonoFormatted,
+          consumo: formData.consumo,
           tipoPropiedad: formData.tipoPropiedad,
           provincia: formData.provincia,
           faseElectrica: formData.faseElectrica
-        }).toString();
-        
-        // Actualizamos Intercom si está disponible
-        if (window.Intercom) {
-          window.Intercom('update', {
-            name: formData.nombre,
-            email: formData.email,
-            phone: telefonoFormatted,
-            custom_data: {
-              tipo_propiedad: formData.tipoPropiedad,
-              provincia: formData.provincia,
-              consumo_kwh: formData.consumo,
-              fase_electrica: formData.faseElectrica,
-              ahorro_estimado: calculateSavings(),
-              fecha_solicitud: new Date().toISOString()
-            }
-          });
-        }
-        
-        // Redirigimos a la página de resultados
-        
-      // Actualizamos Intercom con los datos del usuario
+        }),
+      });
+      
+      const responseText = await response.text();
+      console.log('Raw API response:', responseText.substring(0, 500));
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed API response:', data);
+      } catch (parseError) {
+        console.error('Error parsing API response:', parseError);
+        throw new Error(`El servidor respondió con un formato inesperado (Status: ${response.status})`);
+      }
+      
+      if (!response.ok) {
+        throw new Error(data?.error || 'Error al procesar la solicitud');
+      }
+      
+      console.log('Form processed successfully:', data);
+      const tempId = data?.solicitudId || `temp-${Date.now()}`;
+      console.log('Generated proposal ID:', tempId);
+      
       updateIntercomUser({
         name: formData.nombre,
         email: formData.email,
-        phone: '+507 ' + formData.telefono,
+        phone: telefonoFormatted,
         tipo_propiedad: formData.tipoPropiedad,
         provincia: formData.provincia,
         consumo_kwh: formData.consumo,
         fase_electrica: formData.faseElectrica,
-        ahorro_estimado: calculateSavings(),
+        ahorro_estimado: estimatedSavings,
         fecha_solicitud: new Date().toISOString()
       });
-      
-      // Registrar evento de propuesta creada
       trackIntercomEvent('propuesta_creada', {
         consumo: formData.consumo,
-        ahorro_estimado: calculateSavings()
+        ahorro_estimado: estimatedSavings
       });
       
-      router.push(`/propuesta/resultado?${params}`);
-      } catch (error: any) {
-        console.error('Error al procesar el formulario:', error);
-        alert(`Hubo un error al procesar tu solicitud: ${error.message || 'Error desconocido'}`);
-      } finally {
-        setIsSubmitting(false);
-      }
+      // Redirigir al usuario a la propuesta
+      console.log('Redirecting to proposal page:', `/propuesta/${tempId}`);
+      router.push(`/propuesta/${tempId}`);
+    } catch (error: any) {
+      console.error('Error in handleSubmit:', error);
+      alert(`Hubo un error al procesar tu solicitud: ${error.message || 'Error desconocido'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -269,9 +259,8 @@ export default function ProposalForm() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center py-6 bg-black relative overflow-hidden font-[Mulish,sans-serif]">
-      {/* Background with animated lines */}
+      {/* Background con líneas animadas */}
       <div className="absolute inset-0 bg-black">
-        {/* Grid Pattern - Panel Solar */}
         <div
           className="absolute inset-0"
           style={{
@@ -286,8 +275,7 @@ export default function ProposalForm() {
             opacity: 0.7
           }}
         ></div>
-        
-        {/* Efecto reflejo panel solar */}
+  
         <div
           className="absolute inset-0"
           style={{
@@ -295,8 +283,7 @@ export default function ProposalForm() {
             opacity: 0.7
           }}
         ></div>
-        
-        {/* Animated Lines */}
+  
         <div className="moving-line-h line-h1"></div>
         <div className="moving-line-h line-h2"></div>
         <div className="moving-line-h line-h3"></div>
@@ -304,25 +291,21 @@ export default function ProposalForm() {
         <div className="moving-line-v line-v2"></div>
         <div className="moving-line-v line-v3"></div>
       </div>
-      
-      {/* Content */}
+  
       <div className={`relative z-10 w-full max-w-xl mx-auto px-4 transition-all duration-1000 ${animationComplete ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
-        {/* Form Container */}
         <div className="bg-black border border-[#FF671F]/30 rounded-2xl shadow-2xl shadow-[#FF671F]/10 overflow-hidden mx-4">
-          {/* Logo & Title */}
+          {/* Logo y Título */}
           <div className="text-center py-8 px-4">
             <div className="relative inline-block">
               <h1 className="text-4xl font-bold tracking-tight text-white mb-3">
                 Solar<span className="text-[#FF671F]">Mente</span>
                 <span className="text-[#FF671F] font-light">.AI</span>
-                
-                {/* Circle Icon */}
                 <div className="absolute -right-12 -top-3 z-20">
                   <div className="w-8 h-8 bg-[#FF671F] rounded-full animate-pulse-custom"></div>
                 </div>
               </h1>
             </div>
-            
+  
             <h2 className="text-xl text-white font-light mt-2 mb-2 tracking-wide">
               Energía inteligente para un 
               <span className="relative">
@@ -330,14 +313,13 @@ export default function ProposalForm() {
                 <span className="absolute bottom-0 left-1 h-2 w-full bg-[#FF671F]/20 z-0"></span>
               </span>
             </h2>
-            
+  
             <p className="text-gray-400 text-sm max-w-lg mx-auto tracking-wide">
               Primera empresa en Panamá que combina energía solar con IA avanzada.
               Ahorra hasta un 100% en tu factura de luz con propuestas personalizadas.
             </p>
           </div>
-          
-          {/* Progress Bar */}
+  
           <div className="relative h-1 bg-gray-800">
             <div 
               ref={progressBarRef}
@@ -345,8 +327,7 @@ export default function ProposalForm() {
               style={{ width: `${getProgressPercentage()}%` }}
             ></div>
           </div>
-          
-          {/* Header */}
+  
           <div className="bg-gray-900 text-white p-6">
             <h3 className="text-2xl font-bold mb-2 flex items-center">
               <span>{activeStep < 4 ? `Paso ${activeStep} de 3` : 'Revisar datos'}</span>
@@ -365,11 +346,19 @@ export default function ProposalForm() {
               {activeStep === 4 && "Revisa tus datos antes de generar tu propuesta personalizada con IA."}
             </p>
           </div>
-          
-          {/* Form Body */}
+  
           <div className="p-6 bg-black">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Step 1: Nombre */}
+            <form 
+              onSubmit={handleSubmit} 
+              className="space-y-6"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return false;
+                }
+              }}
+            >
               {activeStep === 1 && (
                 <div className="transition-all duration-300 animate-fadeIn">
                   <label htmlFor="nombre" className="block text-sm font-medium text-gray-300 mb-2">
@@ -381,6 +370,16 @@ export default function ProposalForm() {
                     name="nombre"
                     value={formData.nombre}
                     onChange={handleChange}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (validateStep(1)) {
+                          nextStep();
+                        }
+                        return false;
+                      }
+                    }}
                     className={`w-full px-4 py-3 bg-gray-900 text-white border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF671F] transition-all duration-200 ${
                       errors.nombre ? 'border-red-500' : 'border-gray-700'
                     }`}
@@ -395,7 +394,6 @@ export default function ProposalForm() {
                       {errors.nombre}
                     </p>
                   )}
-                  
                   <div className="mt-10 text-center">
                     <div className="text-xs text-gray-500 mb-4">Este dato nos ayuda a personalizar tu propuesta</div>
                     <button
@@ -411,8 +409,6 @@ export default function ProposalForm() {
                   </div>
                 </div>
               )}
-              
-              {/* Step 2: Contacto */}
               {activeStep === 2 && (
                 <div className="transition-all duration-300 animate-fadeIn">
                   <div className="space-y-5">
@@ -431,6 +427,16 @@ export default function ProposalForm() {
                           name="telefono"
                           value={formData.telefono}
                           onChange={handleChange}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (validateStep(2)) {
+                                nextStep();
+                              }
+                              return false;
+                            }
+                          }}
                           className={`flex-1 px-4 py-3 bg-gray-900 text-white border-2 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#FF671F] transition-all duration-200 ${
                             errors.telefono ? 'border-red-500' : 'border-gray-700'
                           }`}
@@ -447,7 +453,6 @@ export default function ProposalForm() {
                         </p>
                       )}
                     </div>
-            
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                         Email
@@ -458,6 +463,16 @@ export default function ProposalForm() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (validateStep(2)) {
+                              nextStep();
+                            }
+                            return false;
+                          }
+                        }}
                         className={`w-full px-4 py-3 bg-gray-900 text-white border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF671F] transition-all duration-200 ${
                           errors.email ? 'border-red-500' : 'border-gray-700'
                         }`}
@@ -473,7 +488,6 @@ export default function ProposalForm() {
                       )}
                     </div>
                   </div>
-                  
                   <div className="mt-10 flex justify-between">
                     <button
                       type="button"
@@ -485,7 +499,6 @@ export default function ProposalForm() {
                       </svg>
                       <span>Atrás</span>
                     </button>
-                    
                     <button
                       type="button"
                       onClick={nextStep}
@@ -499,8 +512,6 @@ export default function ProposalForm() {
                   </div>
                 </div>
               )}
-              
-              {/* Step 3: Propiedad y Fase Eléctrica */}
               {activeStep === 3 && (
                 <div className="transition-all duration-300 animate-fadeIn">
                   <div className="space-y-5">
@@ -513,6 +524,16 @@ export default function ProposalForm() {
                         name="provincia"
                         value={formData.provincia}
                         onChange={handleChange}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (validateStep(3)) {
+                              nextStep();
+                            }
+                            return false;
+                          }
+                        }}
                         className={`w-full px-4 py-3 bg-gray-900 text-white border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF671F] transition-all duration-200 ${
                           errors.provincia ? 'border-red-500' : 'border-gray-700'
                         }`}
@@ -534,7 +555,6 @@ export default function ProposalForm() {
                         </p>
                       )}
                     </div>
-                    
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
                         Tipo de Propiedad
@@ -542,7 +562,7 @@ export default function ProposalForm() {
                       <div className="grid grid-cols-2 gap-4 mt-2">
                         <div 
                           className={`border-2 ${formData.tipoPropiedad === 'residencial' ? 'border-[#FF671F] bg-[#FF671F]/10' : 'border-gray-700 bg-gray-900'} rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-[#FF671F]/70`}
-                          onClick={() => setFormData({...formData, tipoPropiedad: 'residencial'})}
+                          onClick={() => setFormData({ ...formData, tipoPropiedad: 'residencial' })}
                         >
                           <div className="flex items-center">
                             <div className={`w-5 h-5 rounded-full border-2 ${formData.tipoPropiedad === 'residencial' ? 'border-[#FF671F] bg-[#FF671F]' : 'border-gray-600'} flex items-center justify-center`}>
@@ -553,10 +573,9 @@ export default function ProposalForm() {
                             <span className="ml-2 font-medium text-white">Residencial</span>
                           </div>
                         </div>
-                        
                         <div 
                           className={`border-2 ${formData.tipoPropiedad === 'comercial' ? 'border-[#FF671F] bg-[#FF671F]/10' : 'border-gray-700 bg-gray-900'} rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-[#FF671F]/70`}
-                          onClick={() => setFormData({...formData, tipoPropiedad: 'comercial'})}
+                          onClick={() => setFormData({ ...formData, tipoPropiedad: 'comercial' })}
                         >
                           <div className="flex items-center">
                             <div className={`w-5 h-5 rounded-full border-2 ${formData.tipoPropiedad === 'comercial' ? 'border-[#FF671F] bg-[#FF671F]' : 'border-gray-600'} flex items-center justify-center`}>
@@ -569,8 +588,6 @@ export default function ProposalForm() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Nueva sección para Monofásico o Trifásico */}
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
                         Fase Eléctrica
@@ -578,7 +595,7 @@ export default function ProposalForm() {
                       <div className="grid grid-cols-2 gap-4 mt-2">
                         <div 
                           className={`border-2 ${formData.faseElectrica === 'monofasico' ? 'border-[#FF671F] bg-[#FF671F]/10' : 'border-gray-700 bg-gray-900'} rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-[#FF671F]/70`}
-                          onClick={() => setFormData({...formData, faseElectrica: 'monofasico'})}
+                          onClick={() => setFormData({ ...formData, faseElectrica: 'monofasico' })}
                         >
                           <div className="flex items-center">
                             <div className={`w-5 h-5 rounded-full border-2 ${formData.faseElectrica === 'monofasico' ? 'border-[#FF671F] bg-[#FF671F]' : 'border-gray-600'} flex items-center justify-center`}>
@@ -589,10 +606,9 @@ export default function ProposalForm() {
                             <span className="ml-2 font-medium text-white">Monofásico</span>
                           </div>
                         </div>
-                        
                         <div 
                           className={`border-2 ${formData.faseElectrica === 'trifasico' ? 'border-[#FF671F] bg-[#FF671F]/10' : 'border-gray-700 bg-gray-900'} rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-[#FF671F]/70`}
-                          onClick={() => setFormData({...formData, faseElectrica: 'trifasico'})}
+                          onClick={() => setFormData({ ...formData, faseElectrica: 'trifasico' })}
                         >
                           <div className="flex items-center">
                             <div className={`w-5 h-5 rounded-full border-2 ${formData.faseElectrica === 'trifasico' ? 'border-[#FF671F] bg-[#FF671F]' : 'border-gray-600'} flex items-center justify-center`}>
@@ -605,18 +621,15 @@ export default function ProposalForm() {
                         </div>
                       </div>
                     </div>
-                    
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
                         Consumo promedio mensual (kWh): <span className="font-bold text-[#FF671F]">{formatNumber(formData.consumo)} kWh</span>
                       </label>
                       <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl relative overflow-hidden">
-                        {/* Energy progress indicator */}
                         <div 
                           className="absolute top-0 bottom-0 left-0 bg-[#FF671F]/20 h-full transition-all duration-300"
                           style={{ width: `${(formData.consumo - 1000) / 390}%` }}
                         ></div>
-                        
                         <div className="relative z-10">
                           <input
                             type="range"
@@ -629,25 +642,22 @@ export default function ProposalForm() {
                             onChange={handleChange}
                             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer relative"
                             style={{
-                              background: `linear-gradient(to right, #FF671F 0%, #FF671F ${(formData.consumo-1000)/390}%, #374151 ${(formData.consumo-1000)/390}%, #374151 100%)`
+                              background: `linear-gradient(to right, #FF671F 0%, #FF671F ${(formData.consumo - 1000) / 390}%, #374151 ${(formData.consumo - 1000) / 390}%, #374151 100%)`
                             }}
                           />
                           <div className="flex justify-between text-xs text-gray-400 mt-2">
                             <span>1,000 kWh</span>
                             <span>40,000 kWh</span>
                           </div>
-                          
                           <div className="mt-3 text-xs text-gray-400">
                             <p>
-                              <span className="font-medium text-gray-300">¿Dónde encuentro mi consumo?</span> Revisa tu factura de electricidad, 
-                              donde aparece el consumo en kWh.
+                              <span className="font-medium text-gray-300">¿Dónde encuentro mi consumo?</span> Revisa tu factura de electricidad, donde aparece el consumo en kWh.
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
                   <div className="mt-10 flex justify-between">
                     <button
                       type="button"
@@ -659,7 +669,6 @@ export default function ProposalForm() {
                       </svg>
                       <span>Atrás</span>
                     </button>
-                    
                     <button
                       type="button"
                       onClick={() => {
@@ -678,45 +687,35 @@ export default function ProposalForm() {
                   </div>
                 </div>
               )}
-              
-              {/* Step 4: Resumen y Submit */}
               {activeStep === 4 && (
                 <div className="transition-all duration-300 animate-fadeIn">
                   <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
                     <h3 className="font-medium text-lg mb-4 text-white">Resumen de datos</h3>
-                    
                     <div className="grid grid-cols-2 gap-4">
                       <div className="border-b border-gray-800 pb-2">
                         <p className="text-sm text-gray-500">Nombre</p>
                         <p className="font-medium text-white">{formData.nombre}</p>
                       </div>
-                      
                       <div className="border-b border-gray-800 pb-2">
                         <p className="text-sm text-gray-500">Teléfono</p>
                         <p className="font-medium text-white">+507 {formData.telefono}</p>
                       </div>
-                      
                       <div className="border-b border-gray-800 pb-2">
                         <p className="text-sm text-gray-500">Email</p>
                         <p className="font-medium text-white">{formData.email}</p>
                       </div>
-                      
                       <div className="border-b border-gray-800 pb-2">
                         <p className="text-sm text-gray-500">Provincia</p>
                         <p className="font-medium text-white">{formData.provincia}</p>
                       </div>
-                      
                       <div className="border-b border-gray-800 pb-2">
                         <p className="text-sm text-gray-500">Tipo de Propiedad</p>
                         <p className="font-medium text-white capitalize">{formData.tipoPropiedad}</p>
                       </div>
-                      
                       <div className="border-b border-gray-800 pb-2">
                         <p className="text-sm text-gray-500">Consumo mensual</p>
                         <p className="font-medium text-white">{formatNumber(formData.consumo)} kWh</p>
                       </div>
-
-                      {/* Mostrar la fase eléctrica en el resumen */}
                       <div className="border-b border-gray-800 pb-2">
                         <p className="text-sm text-gray-500">Fase Eléctrica</p>
                         <p className="font-medium text-white">
@@ -725,7 +724,6 @@ export default function ProposalForm() {
                       </div>
                     </div>
                   </div>
-                  
                   <div className="rounded-xl p-5 bg-gradient-to-br from-green-900/30 to-green-800/20 border border-green-700/30 mb-6">
                     <div className="flex items-start">
                       <div className="bg-green-800/50 rounded-full p-2 mr-3">
@@ -741,7 +739,6 @@ export default function ProposalForm() {
                       </div>
                     </div>
                   </div>
-                  
                   <div className="mt-8 flex justify-between">
                     <button
                       type="button"
@@ -753,10 +750,19 @@ export default function ProposalForm() {
                       </svg>
                       <span>Atrás</span>
                     </button>
-                    
                     <button
                       type="submit"
                       disabled={isSubmitting}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (validateStep(4) && !isSubmitting) {
+                            handleSubmit(e);
+                          }
+                          return false;
+                        }
+                      }}
                       className="orange-button px-8 py-4 text-white font-bold rounded-lg transition-all duration-300 flex items-center group"
                     >
                       {isSubmitting ? (

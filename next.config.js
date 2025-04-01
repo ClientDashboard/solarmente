@@ -1,9 +1,18 @@
+// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  typescript: {
-    // Ignora errores de TypeScript durante la compilación
-    ignoreBuildErrors: true,
+  // Otras configuraciones...
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // No intentar cargar módulos del servidor en el cliente
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        child_process: false,
+      };
+    }
+    return config;
   },
 };
 

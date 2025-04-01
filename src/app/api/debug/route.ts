@@ -1,7 +1,41 @@
 // src/app/api/debug/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { verifyEmailConfig } from '../../../../services/email';
+import sgMail from '@sendgrid/mail';
+
+// Create a local function for email verification
+async function verifyEmailConfig() {
+  const config = {
+    sendgridConfigured: !!process.env.SENDGRID_API_KEY,
+    fromEmailConfigured: !!process.env.EMAIL_FROM,
+    adminEmailConfigured: !!process.env.ADMIN_EMAIL,
+    sendgridValid: false,
+    detailedStatus: 'Unknown'
+  };
+
+  // If SendGrid is not configured, return early
+  if (!config.sendgridConfigured) {
+    config.detailedStatus = 'SendGrid API key not configured';
+    return config;
+  }
+
+  try {
+    // Initialize SendGrid with API key
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
+    
+    // Basic validation - we don't send an email, just check if the API key is valid format
+    // Note: This is a simple validation and doesn't guarantee the API key works
+    config.sendgridValid = process.env.SENDGRID_API_KEY?.startsWith('SG.') || false;
+    config.detailedStatus = config.sendgridValid 
+      ? 'SendGrid API key has valid format' 
+      : 'SendGrid API key has invalid format';
+  } catch (error: any) {
+    config.sendgridValid = false;
+    config.detailedStatus = `SendGrid validation failed: ${error.message || 'Unknown error'}`;
+  }
+
+  return config;
+}
 
 export async function GET(request: NextRequest) {
   try {

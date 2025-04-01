@@ -1,162 +1,183 @@
 // src/app/api/proposal/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { sendClientProposalEmail, sendAdminNotificationEmail } from '../../../../services/email';
+import { v4 as uuidv4 } from 'uuid';
 
-// Inicializar Supabase
+// Initialize Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: NextRequest) {
   try {
-    // Parsear los datos del formulario
+    // Log initial headers for diagnosis
+    console.log('POST Request received:', {
+      contentType: request.headers.get('content-type'),
+      contentLength: request.headers.get('content-length')
+    });
+
+    // Parse the form data
     const data = await request.json();
+    console.log('Received Proposal Data:', {
+      nombre: data.nombre,
+      email: data.email,
+      telefono: data.telefono,
+      consumo: data.consumo,
+      tipoPropiedad: data.tipoPropiedad,
+      provincia: data.provincia,
+      faseElectrica: data.faseElectrica
+    });
+
     const { 
       nombre, 
       email, 
       telefono, 
       consumo, 
-      tipoPropiedad,  // En el formulario es tipoPropiedad
+      tipoPropiedad, // from form data
       provincia, 
-      faseElectrica    // En el formulario es faseElectrica
+      faseElectrica // from form data
     } = data;
-    
-    // Validar campos requeridos
-    if (!nombre || !email || !telefono || !consumo) {
+
+    // Validate required fields
+    const missingFields = [];
+    if (!nombre) missingFields.push('nombre');
+    if (!email) missingFields.push('email');
+    if (!telefono) missingFields.push('telefono');
+    if (!consumo) missingFields.push('consumo');
+
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
       return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
+        { error: 'Faltan campos requeridos', missingFields },
         { status: 400 }
       );
     }
-    
-    // Calcular ahorro estimado
-    const tarifaPromedio = 0.26; // $0.26 por kWh
+
+    // Calculate estimated savings
+    const tarifaPromedio = 0.26; // $0.26 per kWh
     const ahorroEstimado = Number((consumo * tarifaPromedio).toFixed(2));
-    
-    // Formatear el teléfono para asegurar consistencia
+    console.log('Estimated Savings:', ahorroEstimado);
+
+    // Format phone number
     const telefonoFormatted = telefono.startsWith('+') ? telefono : `+507${telefono.replace(/\s+/g, '')}`;
-    
-    // Crear URL para la propuesta (temporal hasta que tengamos el ID)
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://solarmente.io';
-    const tempId = `temp-${Date.now()}`;
-    let propuestaUrl = `${baseUrl}/propuesta/${tempId}`;
-    
-    // Preparar datos para insertar en solar_proposals
-    // Usamos la estructura exacta de la tabla que has compartido
+
+    // Generate a UUID for the proposal
+    const proposalId = uuidv4();
+
+    // Determine environment and base URL
+    const isLocalDev = process.env.NODE_ENV === 'development';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (isLocalDev ? 'http://localhost:3007' : 'https://solarmente.io');
+    const propuestaUrl = `${baseUrl}/propuesta/${proposalId}`;
+    console.log(`Generando URL: ${propuestaUrl} (Entorno: ${isLocalDev ? 'desarrollo' : 'producción'})`);
+
+    // Prepare data for insertion into 'solar_proposals'
     const proposalData = {
+      id: proposalId,
       nombre,
       email,
       telefono: telefonoFormatted,
       consumo,
-      tipo_propiedad: tipoPropiedad, // Mapeo a la columna correcta
+      tipo_propiedad: tipoPropiedad,
       provincia,
-      fase_electrica: faseElectrica, // Mapeo a la columna correcta
+      fase_electrica: faseElectrica,
+      propuesta_url: propuestaUrl,
       ahorro_estimado: ahorroEstimado,
       created_at: new Date().toISOString()
     };
-    
     console.log('Guardando en solar_proposals:', proposalData);
-    
-    // Guardar en solar_proposals
-    const { data: proposalResult, error } = await supabase
+    console.log('Attempting Supabase insert with prepared data:', {
+      id: proposalData.id,
+      fields: Object.keys(proposalData)
+    });
+
+    // Insert into Supabase
+    const { data: proposalResult, error: insertError } = await supabase
       .from('solar_proposals')
       .insert(proposalData)
       .select();
-      
-    if (error) {
-      console.error('Error al guardar propuesta:', error);
+
+    console.log('Supabase insert complete:', {
+      success: !insertError,
+      hasData: !!proposalResult && proposalResult.length > 0,
+      error: insertError ? `${insertError.code || 'unknown'}: ${insertError.message || 'No message'}` : null
+    });
+
+    if (insertError) {
+      console.error('Error inserting proposal:', insertError);
       return NextResponse.json(
-        { error: 'Error al guardar la propuesta en la base de datos: ' + error.message },
+        { error: 'Error al guardar la propuesta en la base de datos: ' + insertError.message },
         { status: 500 }
       );
     }
-    
     if (!proposalResult || proposalResult.length === 0) {
       return NextResponse.json(
         { error: 'No se pudo crear la propuesta' },
         { status: 500 }
       );
     }
-    
-    // Obtener el ID de la propuesta creada
-    const proposalId = proposalResult[0].id;
-    
-    // Actualizar la URL de la propuesta con el ID real
-    propuestaUrl = `${baseUrl}/propuesta/${proposalId}`;
-    
-    // Actualizar el registro con la URL de la propuesta
-    await supabase
-      .from('solar_proposals')
-      .update({ propuesta_url: propuestaUrl })
-      .eq('id', proposalId);
-    
-    // Registrar el seguimiento
+
+    // Register tracking for proposal creation
     try {
       await supabase
         .from('seguimientos')
         .insert({
-          solicitud_id: proposalId, // Usamos el ID de la propuesta como solicitud_id
+          solicitud_id: proposalId,
           tipo: 'propuesta_creada',
           notas: 'Propuesta solar creada automáticamente',
           fecha: new Date().toISOString(),
           usuario: 'sistema'
         });
+      console.log('Tracking for proposal creation recorded.');
     } catch (seguimientoError) {
-      console.error('Error al registrar seguimiento (no crítico):', seguimientoError);
-      // No detenemos el proceso por este error
+      console.error('Error recording tracking (non-critical):', seguimientoError);
     }
-    
-    // Iniciar las operaciones de envío de correo en paralelo
+
+    // Force sending emails even in development (for testing)
     let emailStatus = { clienteEnviado: false, adminEnviado: false };
-    
     try {
-      // Enviar email al cliente
-      const clienteInfo = await sendClientProposalEmail({
-        nombre,
-        email,
-        propuestaUrl,
-        ahorroEstimado
+      // Fix: Use a more reliable URL construction for the email API
+      // Make sure the API endpoint is correctly formed
+      const emailApiUrl = `${baseUrl}/api/send-email`;
+      console.log(`Sending emails via API endpoint: ${emailApiUrl}`);
+      
+      const emailResponse = await fetch(emailApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          nombre,
+          propuestaUrl,
+          ahorroEstimado,
+          telefono: telefonoFormatted,
+          tipoPropiedad,
+          provincia,
+          consumo,
+          adminEmail: process.env.ADMIN_EMAIL || 'ventas@solarmente.io'
+        }),
       });
       
-      emailStatus.clienteEnviado = true;
-      console.log('Email cliente enviado:', clienteInfo?.messageId);
+      if (emailResponse.ok) {
+        const emailResult = await emailResponse.json();
+        emailStatus = emailResult.emailStatus || { clienteEnviado: true, adminEnviado: true };
+        console.log('Emails enviados exitosamente:', emailStatus);
+      } else {
+        console.error('Error sending emails via endpoint:', await emailResponse.text());
+      }
       
-      // Enviar email al administrador
-      const adminInfo = await sendAdminNotificationEmail({
-        nombre,
-        email,
-        telefono: telefonoFormatted,
-        tipoInstalacion: tipoPropiedad,
-        consumo,
-        propuestaUrl,
-        ahorroEstimado
-      });
-      
-      emailStatus.adminEnviado = true;
-      console.log('Email admin enviado:', adminInfo?.messageId);
-      
-      // Registrar el seguimiento de emails enviados
+      // Record tracking for email sending
       await supabase
         .from('seguimientos')
         .insert({
           solicitud_id: proposalId,
           tipo: 'emails_enviados',
-          notas: `Emails enviados correctamente: cliente=${email}, admin=${process.env.ADMIN_EMAIL}`,
+          notas: `Emails enviados: cliente=${email}, admin=${process.env.ADMIN_EMAIL || 'ventas@solarmente.io'}`,
           fecha: new Date().toISOString(),
           usuario: 'sistema'
         });
-        
-    } catch (error) {
-      // Manejo correcto del error desconocido en TypeScript
-      console.error('Error al enviar correos:', error);
-      
-      // Extraer el mensaje del error de manera segura para TypeScript
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Error desconocido';
-      
-      // Registrar el error en seguimientos
+      console.log('Tracking for email sending recorded.');
+    } catch (emailError) {
+      console.error('Error sending emails:', emailError);
+      const errorMessage = emailError instanceof Error ? emailError.message : 'Error desconocido';
       await supabase
         .from('seguimientos')
         .insert({
@@ -167,22 +188,18 @@ export async function POST(request: NextRequest) {
           usuario: 'sistema'
         });
     }
-    
+
     return NextResponse.json({
       success: true,
       message: 'Propuesta creada exitosamente',
       propuestaUrl,
-      solicitudId: proposalId, // Devolvemos el ID como solicitudId para mantener compatibilidad
+      solicitudId: proposalId,
       emailsEnviados: emailStatus
     });
     
   } catch (error) {
-    // Manejo correcto del error en TypeScript
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : 'Error desconocido';
-      
-    console.error('Error al procesar solicitud:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('Error processing proposal:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor: ' + errorMessage },
       { status: 500 }

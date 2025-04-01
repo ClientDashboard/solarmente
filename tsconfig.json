@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
-    // Agrega estas opciones específicas para JSX
     "jsx": "preserve",
     "jsxImportSource": "react",
-    // Resto de tus opciones existentes
     "target": "es5",
     "lib": [
       "dom",
@@ -34,8 +32,8 @@
     ]
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*",
+    "services/**/*",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],

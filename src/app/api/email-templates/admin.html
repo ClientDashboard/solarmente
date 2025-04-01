@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolarMente - Nueva propuesta generada</title>
+  <style>
+    /* General Reset & Styles */
+    body, p, h1, h2, h3, a { margin: 0; padding: 0; }
+    body { background-color: #000000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+    .container { max-width: 600px; margin: 20px auto; background-color: #111111; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(255,103,31,0.2); }
+    .header { background-color: #111111; padding: 30px 20px; text-align: center; border-bottom: 1px solid #222222; }
+    .header img { max-width: 180px; margin-bottom: 20px; }
+    .header h1 { font-size: 32px; color: #ffffff; margin-top: 10px; }
+    .header .highlight { color: #FF671F; }
+    .alert-box {
+      background-color: #1a1a1a;
+      padding: 30px 20px;
+      text-align: center;
+      border-bottom: 1px solid #222222;
+      position: relative;
+      overflow: hidden;
+    }
+    .alert-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #FF671F, transparent);
+      animation: animate 4s linear infinite;
+    }
+    @keyframes animate {
+      0% { left: -100%; }
+      50% { left: 100%; }
+      100% { left: 100%; }
+    }
+    .alert-box h2 { font-size: 26px; color: #ffffff; margin-bottom: 16px; }
+    .alert-box p { font-size: 18px; color: #cccccc; }
+    .content { padding: 30px 20px; color: #cccccc; background-color: #0f0f0f; }
+    .content h2 { font-size: 22px; margin-bottom: 20px; color: #ffffff; }
+    .customer-info {
+      background-color: #1a1a1a;
+      border: 1px solid #333333;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+    .info-item {
+      margin-bottom: 15px;
+    }
+    .info-label {
+      display: block;
+      font-size: 12px;
+      color: #999999;
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: bold;
+    }
+    .highlight-value {
+      color: #FF671F;
+      font-size: 18px;
+    }
+    .cta-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 30px 0;
+    }
+    .cta-button {
+      display: inline-block;
+      padding: 14px 20px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 8px;
+      text-align: center;
+      min-width: 200px;
+    }
+    .proposal-btn {
+      background: linear-gradient(90deg, #FF671F 0%, #FF8B3D 100%);
+      color: #ffffff !important;
+    }
+    .whatsapp-btn {
+      background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
+      color: #ffffff !important;
+    }
+    .notification-badge {
+      display: inline-block;
+      background-color: #FF671F;
+      color: white;
+      font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+    .footer { background-color: #080808; text-align: center; padding: 30px 20px; font-size: 14px; color: #777777; border-top: 1px solid #222222; }
+    @media only screen and (max-width: 600px) {
+      .container { margin: 10px; }
+      .cta-buttons { flex-direction: column; }
+      .cta-button { width: 100%; }
+      .info-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <table role="presentation" width="100%" style="background-color: #000000; padding: 20px 0;">
+    <tr>
+      <td align="center">
+        <table class="container" role="presentation" cellpadding="0" cellspacing="0" width="600">
+          <!-- Header with Logo and Tagline -->
+          <tr>
+            <td class="header">
+              <img src="https://solarmente.io/images/logo.png" alt="SolarMente Logo" style="display: block; margin: 0 auto; width: 180px; height: auto;">
+              <h1>Solar<span class="highlight">Mente</span><span class="highlight" style="font-weight: 300;">.AI</span></h1>
+            </td>
+          </tr>
+          <!-- Alert Box -->
+          <tr>
+            <td class="alert-box">
+              <div class="notification-badge">NUEVA PROPUESTA</div>
+              <h2>Nueva propuesta solar generada</h2>
+              <p>Se ha creado una propuesta para un cliente potencial</p>
+            </td>
+          </tr>
+          <!-- Main Content -->
+          <tr>
+            <td class="content">
+              <h2>Detalles del Cliente</h2>
+              
+              <div class="customer-info">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">NOMBRE</span>
+                    <span class="info-value">{{clienteNombre}}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">EMAIL</span>
+                    <span class="info-value">{{clienteEmail}}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">TELÉFONO</span>
+                    <span class="info-value">{{clienteTelefono}}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">TIPO DE PROPIEDAD</span>
+                    <span class="info-value">{{tipoPropiedad}}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">PROVINCIA</span>
+                    <span class="info-value">{{provincia}}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">CONSUMO MENSUAL</span>
+                    <span class="info-value">{{consumo}} kWh</span>
+                  </div>
+                </div>
+                <div class="info-item" style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333333;">
+                  <span class="info-label">AHORRO MENSUAL ESTIMADO</span>
+                  <span class="info-value highlight-value">${{ahorroEstimado}}</span>
+                </div>
+              </div>
+              
+              <div class="cta-buttons">
+                <a href="https://wa.me/{{clienteTelefonoDigits}}?text=Hola%20{{clienteNombre}},%20soy%20de%20SolarMente.%20Vi%20tu%20solicitud%20de%20propuesta%20solar%20y%20quería%20contactarte%20para%20resolver%20cualquier%20duda%20que%20tengas." class="cta-button whatsapp-btn">
+                  Contactar por WhatsApp
+                </a>
+                
+                <a href="{{proposalUrl}}" class="cta-button proposal-btn">
+                  Ver propuesta
+                </a>
+              </div>
+              
+              <p style="text-align: center; font-size: 14px; color: #999999; font-style: italic;">
+                Esta propuesta fue generada automáticamente por SolarMente.AI en respuesta a la solicitud del cliente.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td class="footer">
+              <p>© 2025 SolarMente. Todos los derechos reservados.</p>
+              <p style="margin-top: 10px;">Primera empresa en Panamá que combina energía solar con IA avanzada.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
