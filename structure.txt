@@ -1,0 +1,91 @@
+.
+├── README.md
+├── _IGNORE_solarmente
+│   ├── AutofillStates
+│   ├── BrowserMetrics-spare.pma
+│   ├── CertificateRevocation
+│   ├── ChromeFeatureState
+│   ├── Crowd Deny
+│   ├── Default
+│   ├── DevToolsActivePort
+│   ├── FileTypePolicies
+│   ├── Fingerprinting Protection Filter
+│   ├── FirstPartySetsPreloaded
+│   ├── GrShaderCache
+│   ├── GraphiteDawnCache
+│   ├── HistorySearch
+│   ├── Last Version
+│   ├── Local State
+│   ├── MEIPreload
+│   ├── MaskedDomainListPreloaded
+│   ├── OnDeviceHeadSuggestModel
+│   ├── OriginTrials
+│   ├── PKIMetadata
+│   ├── PlusAddressBlocklist
+│   ├── PrivacySandboxAttestationsPreloaded
+│   ├── RunningChromeVersion -> 131.0.6778.204:1
+│   ├── SSLErrorAssistant
+│   ├── Safe Browsing
+│   ├── SafetyTips
+│   ├── ShaderCache
+│   ├── SingletonCookie -> 9440135993996668547
+│   ├── SingletonLock -> Alvaros-Mac-mini.local-13127
+│   ├── SingletonSocket -> /var/folders/yj/_pgbmdv5741c78b0s1fscn7w0000gn/T/.com.google.chrome.for.testing.Can8Fl/SingletonSocket
+│   ├── Subresource Filter
+│   ├── TpcdMetadata
+│   ├── TrustTokenKeyCommitments
+│   ├── Variations
+│   ├── WidevineCdm
+│   ├── ZxcvbnData
+│   ├── component_crx_cache
+│   ├── first_party_sets.db
+│   ├── first_party_sets.db-journal
+│   └── segmentation_platform
+├── eslint.config.mjs
+├── maizzle
+│   ├── README.md
+│   ├── components
+│   ├── config.js
+│   ├── config.production.js
+│   ├── emails
+│   ├── images
+│   ├── layouts
+│   ├── package-lock.json
+│   ├── package.json
+│   └── tailwind.config.js
+├── next-env.d.ts
+├── next.config.js
+├── package-lock.json
+├── package.json
+├── page.tsx
+├── postcss.config.js
+├── postcss.config.js.bak
+├── project_structure.txt
+├── public
+│   ├── images
+│   └── videos
+├── services
+│   ├── email.ts
+│   └── proposalService.ts
+├── solarmente.data.json
+├── src
+│   ├── app
+│   ├── components
+│   ├── lib
+│   ├── middleware
+│   └── types
+├── structure.txt
+├── styles
+│   └── animations.css
+├── tailwind.config.js
+├── tailwind.config.js.bak
+├── temp.tsx
+├── tsconfig.json
+├── types
+│   └── index.ts
+├── update-form-intercom.js
+├── update-project-card.js
+├── update-proposal-form.js
+└── whatsapp-dependencies.txt
+
+47 directories, 42 files

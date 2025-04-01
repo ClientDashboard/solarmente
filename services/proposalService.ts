@@ -81,7 +81,8 @@ export async function processProposal(formData: {
         propuestaUrl,
         formData.telefono,
         formData.tipoPropiedad,
-        formData.consumo,
+        formData.provincia, // <-- Add the provincia parameter here
+        formData.consumo,   // <-- Now consumo is in the correct position
         ahorroEstimado
       )
     ]);
