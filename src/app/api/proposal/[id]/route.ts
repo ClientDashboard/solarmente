@@ -5,12 +5,18 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+type Params = {
+  params: {
+    id: string;
+  };
+};
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
   try {
-    const id = params.id;
+    const id = context.params.id;
     console.log('API - Fetching proposal with ID:', id);
     
     // Rest of your existing code remains the same
