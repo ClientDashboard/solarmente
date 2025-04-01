@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -26,7 +26,7 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id } = context.params;
     console.log('API - Fetching proposal with ID:', id);
 
     const isTempId = id.startsWith('temp-');
