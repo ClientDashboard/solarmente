@@ -1,18 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Check if environment variables are set
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Supabase URL or Service Role Key not set in environment variables!');
+}
+
+const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+
+// Optionally, specify the Edge runtime
+// export const runtime = 'edge';
 
 export async function GET(
   request: NextRequest,
-  { params, searchParams }: { 
-    params: { id: string },
-    searchParams: { [key: string]: string | string[] | undefined }
-  }
+  { params }: { params: { id: string } }
 ) {
   try {
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json(
+        { error: 'Supabase configuration missing' },
+        { status: 500 }
+      );
+    }
+
     const { id } = params;
     console.log('API - Fetching proposal with ID:', id);
 
@@ -32,8 +45,12 @@ export async function GET(
 
       if (error) {
         console.error('API - Database error for temp ID:', error);
+        return NextResponse.json(
+          { error: 'Database error: ' + error.message },
+          { status: 500 }
+        );
       }
-        
+
       if (!data || data.length === 0) {
         console.log('API - No recent proposal found, using fallback data');
         return NextResponse.json({
@@ -48,7 +65,7 @@ export async function GET(
           created_at: new Date().toISOString()
         });
       }
-      
+
       console.log('API - Returning most recent proposal for temp ID');
       return NextResponse.json(data[0]);
     } else {
@@ -58,7 +75,7 @@ export async function GET(
         .select('*')
         .eq('id', id)
         .maybeSingle();
-        
+
       if (error) {
         console.error('API - Error fetching proposal:', error);
         return NextResponse.json(
@@ -66,7 +83,7 @@ export async function GET(
           { status: 500 }
         );
       }
-        
+
       if (!data) {
         console.log('API - No proposal found with ID:', id);
         return NextResponse.json(
@@ -74,17 +91,17 @@ export async function GET(
           { status: 404 }
         );
       }
-      
+
       console.log('API - Successfully retrieved proposal');
       return NextResponse.json(data);
     }
   } catch (error) {
     console.error('API - Unexpected error:', error);
-    
-    const errorMessage = error instanceof Error 
-      ? error.message 
+
+    const errorMessage = error instanceof Error
+      ? error.message
       : 'Error desconocido';
-      
+
     return NextResponse.json(
       { error: 'Error interno del servidor: ' + errorMessage },
       { status: 500 }
