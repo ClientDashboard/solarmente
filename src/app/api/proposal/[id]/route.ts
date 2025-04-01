@@ -11,12 +11,16 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-// Optionally, specify the Edge runtime
-// export const runtime = 'edge';
+// This type definition matches exactly what Next.js 15.2.4 expects for dynamic route segments
+type Props = {
+  params: {
+    id: string
+  }
+}
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: Props
 ) {
   try {
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -26,7 +30,7 @@ export async function GET(
       );
     }
 
-    const { id } = context.params;
+    const id = params.id;
     console.log('API - Fetching proposal with ID:', id);
 
     const isTempId = id.startsWith('temp-');
