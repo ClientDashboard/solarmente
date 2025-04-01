@@ -7,7 +7,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params, searchParams }: { 
+    params: { id: string },
+    searchParams: { [key: string]: string | string[] | undefined }
+  }
 ) {
   try {
     const { id } = params;
@@ -30,22 +33,22 @@ export async function GET(
       if (error) {
         console.error('API - Database error for temp ID:', error);
       }
-
+        
       if (!data || data.length === 0) {
         console.log('API - No recent proposal found, using fallback data');
         return NextResponse.json({
           id,
-          nombre: 'Cliente Nuevo',
-          email: 'cliente@ejemplo.com',
-          telefono: '+507 6123-4567',
+          nombre: "Cliente Nuevo",
+          email: "cliente@ejemplo.com",
+          telefono: "+507 6123-4567",
           consumo: 1500,
-          tipo_propiedad: 'residencial',
-          fase_electrica: 'monofasico',
+          tipo_propiedad: "residencial",
+          fase_electrica: "monofasico",
           ahorro_estimado: 390,
           created_at: new Date().toISOString()
         });
       }
-
+      
       console.log('API - Returning most recent proposal for temp ID');
       return NextResponse.json(data[0]);
     } else {
@@ -55,7 +58,7 @@ export async function GET(
         .select('*')
         .eq('id', id)
         .maybeSingle();
-
+        
       if (error) {
         console.error('API - Error fetching proposal:', error);
         return NextResponse.json(
@@ -63,7 +66,7 @@ export async function GET(
           { status: 500 }
         );
       }
-
+        
       if (!data) {
         console.log('API - No proposal found with ID:', id);
         return NextResponse.json(
@@ -71,16 +74,17 @@ export async function GET(
           { status: 404 }
         );
       }
-
+      
       console.log('API - Successfully retrieved proposal');
       return NextResponse.json(data);
     }
   } catch (error) {
     console.error('API - Unexpected error:', error);
-
-    const errorMessage =
-      error instanceof Error ? error.message : 'Error desconocido';
-
+    
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'Error desconocido';
+      
     return NextResponse.json(
       { error: 'Error interno del servidor: ' + errorMessage },
       { status: 500 }
