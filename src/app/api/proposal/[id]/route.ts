@@ -5,26 +5,18 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-type Params = {
-  params: {
-    id: string;
-  };
-};
-
 export async function GET(
   request: NextRequest,
-  context: Params
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = context.params.id;
+    const { id } = params;
     console.log('API - Fetching proposal with ID:', id);
     
-    // Rest of your existing code remains the same
     const isTempId = id.startsWith('temp-');
     
     if (isTempId) {
       console.log('API - Processing temporary ID request');
-      // Para IDs temporales, buscar la propuesta más reciente creada en los últimos 5 minutos
       const fiveMinutesAgo = new Date();
       fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
       
@@ -41,7 +33,6 @@ export async function GET(
         
       if (!data || data.length === 0) {
         console.log('API - No recent proposal found, using fallback data');
-        // Devolver datos ficticios para propuestas temporales
         return NextResponse.json({
           id,
           nombre: "Cliente Nuevo",
@@ -59,7 +50,6 @@ export async function GET(
       return NextResponse.json(data[0]);
     } else {
       console.log('API - Processing real ID request');
-      // Para IDs reales, obtener la propuesta específica
       const { data, error } = await supabase
         .from('solar_proposals')
         .select('*')
