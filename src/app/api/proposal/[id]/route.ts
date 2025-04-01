@@ -5,12 +5,18 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+interface RouteHandlerContext {
+  params: {
+    id: string;
+  };
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteHandlerContext
 ) {
   try {
-    const { id } = params;
+    const { id } = context.params;
     console.log('API - Fetching proposal with ID:', id);
     
     const isTempId = id.startsWith('temp-');
